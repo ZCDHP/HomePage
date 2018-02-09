@@ -1,10 +1,20 @@
 import * as React from "react";
 
 const defaultState: FlappyState = {
-    top: 500
+    top: 500,
+    totalMS: 0
 }
-const img0 = new Image();
-img0.src = "./flappy/0.png";
+
+const imgs = [
+    "0.png",
+    "1.png",
+    "2.png",
+    "3.png"
+].map(n => {
+    const img = new Image();
+    img.src = `./flappy/${n}`;
+    return img;
+});
 
 export class Main extends React.Component<{ id: string }>{
     render() {
@@ -12,7 +22,7 @@ export class Main extends React.Component<{ id: string }>{
     }
 
     async componentDidMount() {
-        await new Promise((resolve, _) => img0.onload = resolve);
+        await Promise.all(imgs.map(i => new Promise((resolve, _) => i.onload = resolve)));
         const context = (document.getElementById(this.props.id) as HTMLCanvasElement).getContext("2d") as CanvasRenderingContext2D;
         this.renderContext = context;
         context.canvas.height = context.canvas.clientHeight;
@@ -23,7 +33,8 @@ export class Main extends React.Component<{ id: string }>{
             const passedMS = currentMS - lastMS;
 
             this.flappyState = {
-                top: this.flappyState.top + passedMS / 10
+                top: this.flappyState.top + passedMS / 10,
+                totalMS: this.flappyState.totalMS + passedMS
             };
 
             renderState(this.renderContext as CanvasRenderingContext2D, this.flappyState);
@@ -41,19 +52,22 @@ export class Main extends React.Component<{ id: string }>{
 
 interface FlappyState {
     top: number
+    totalMS: number
 }
 
 function click(oldState: FlappyState): FlappyState {
     return {
-        top: oldState.top - 100
+        top: oldState.top - 100,
+        totalMS: oldState.totalMS
     };
 }
 
 function renderState(context: CanvasRenderingContext2D, state: FlappyState) {
     context.clearRect(0, 0, 1600, 900);
-    context.drawImage(img0, 100, state.top, 25, 50);
+    const img = imgs[Math.floor((state.totalMS / 100) % imgs.length)];
+    context.drawImage(img, 100, state.top, 25, 50);
     context.save();
     context.scale(-1, 1);
-    context.drawImage(img0, -125, state.top, -25, 50);
+    context.drawImage(img, -125, state.top, -25, 50);
     context.restore();
 }
