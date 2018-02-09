@@ -1,5 +1,5 @@
 var config = {
-  entry: './src/index.ts',
+  entry: './src/index.tsx',
   output: {
     path: __dirname + '/dist',
     filename: 'index.js'
@@ -14,7 +14,10 @@ var config = {
       exclude: /node_modules/
     }]
   },
-  node:false
+  externals:{
+    "react":"React",
+    "react-dom":"ReactDOM"
+  }
 };
 
 module.exports = config;
