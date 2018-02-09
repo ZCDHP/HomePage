@@ -1,9 +1,11 @@
 import * as React from "react";
 import * as ReactDom from 'react-dom'
 
+import {Main as Flappy} from './flappy/main'
+
 
 document.addEventListener('DOMContentLoaded',()=>{
     ReactDom.render(      
-        <p> Hello!</p>,
+        <Flappy id="flappy"/>,
         document.body);
 });
