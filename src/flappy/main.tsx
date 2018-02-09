@@ -30,12 +30,7 @@ export class Main extends React.Component<{ id: string }>{
         context.scale(context.canvas.width / 1600, context.canvas.height / 900)
 
         const onFrame = (currentMS: number, lastMS: number) => {
-            const passedMS = currentMS - lastMS;
-
-            this.flappyState = {
-                top: this.flappyState.top + passedMS / 10,
-                totalMS: this.flappyState.totalMS + passedMS
-            };
+            this.flappyState = frame(currentMS - lastMS, this.flappyState);
 
             renderState(this.renderContext as CanvasRenderingContext2D, this.flappyState);
             requestAnimationFrame(nextMS => onFrame(nextMS, currentMS));
@@ -53,6 +48,13 @@ export class Main extends React.Component<{ id: string }>{
 interface FlappyState {
     top: number
     totalMS: number
+}
+
+function frame(passedMS: number, oldState: FlappyState): FlappyState {
+    return {
+        top: oldState.top + passedMS / 10,
+        totalMS: oldState.totalMS + passedMS
+    };
 }
 
 function click(oldState: FlappyState): FlappyState {
