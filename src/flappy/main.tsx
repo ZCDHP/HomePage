@@ -1,11 +1,18 @@
 import * as React from "react";
 
+const defaultState: FlappyState = {
+    top: 500
+}
+const img0 = new Image();
+img0.src = "./flappy/0.png";
+
 export class Main extends React.Component<{ id: string }>{
     render() {
         return <canvas id={this.props.id} onClick={() => this.flappyState = click(this.flappyState)}></canvas>
     }
 
-    componentDidMount() {
+    async componentDidMount() {
+        await new Promise((resolve, _) => img0.onload = resolve);
         const context = (document.getElementById(this.props.id) as HTMLCanvasElement).getContext("2d") as CanvasRenderingContext2D;
         this.renderContext = context;
         context.canvas.height = context.canvas.clientHeight;
@@ -36,10 +43,6 @@ interface FlappyState {
     top: number
 }
 
-const defaultState: FlappyState = {
-    top: 500
-}
-
 function click(oldState: FlappyState): FlappyState {
     return {
         top: oldState.top - 100
@@ -48,6 +51,9 @@ function click(oldState: FlappyState): FlappyState {
 
 function renderState(context: CanvasRenderingContext2D, state: FlappyState) {
     context.clearRect(0, 0, 1600, 900);
-    context.fillStyle = 'black';
-    context.fillRect(100, state.top, 25, 25);
+    context.drawImage(img0, 100, state.top, 25, 50);
+    context.save();
+    context.scale(-1, 1);
+    context.drawImage(img0, -125, state.top, -25, 50);
+    context.restore();
 }
