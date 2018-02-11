@@ -1,9 +1,5 @@
 import * as React from "react";
-
-const defaultState: FlappyState = {
-    top: 500,
-    totalMS: 0
-}
+import { FlappyState, DefaultState, frame, click } from './state';
 
 const imgs = [
     "0.png",
@@ -41,27 +37,7 @@ export class Main extends React.Component<{ id: string }>{
     }
 
     renderContext: CanvasRenderingContext2D | null = null
-    flappyState: FlappyState = defaultState
-}
-
-
-interface FlappyState {
-    top: number
-    totalMS: number
-}
-
-function frame(passedMS: number, oldState: FlappyState): FlappyState {
-    return {
-        top: oldState.top + passedMS / 10,
-        totalMS: oldState.totalMS + passedMS
-    };
-}
-
-function click(oldState: FlappyState): FlappyState {
-    return {
-        top: oldState.top - 100,
-        totalMS: oldState.totalMS
-    };
+    flappyState = DefaultState
 }
 
 function renderState(context: CanvasRenderingContext2D, state: FlappyState) {
