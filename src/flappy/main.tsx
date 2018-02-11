@@ -1,6 +1,6 @@
 import * as React from "react";
 import { assertUnreachable } from "./util";
-import { GameState, DefaultState, GameStateTypes, frame, click } from './state';
+import { PlayerHeight, PlayerWidth, PlayerLeft, GameState, DefaultState, GameStateTypes, frame, click } from './state';
 
 const imgs = [
     "0.png",
@@ -50,14 +50,23 @@ function renderState(context: CanvasRenderingContext2D, state: GameState) {
             context.fillText("Click To Start", 520, 400);
             return;
         case GameStateTypes.Flapping:
-            const img = imgs[Math.floor((state.totalMS / 100) % imgs.length)];
-            context.drawImage(img, 100, state.top, 25, 50);
-            context.save();
-            context.scale(-1, 1);
-            context.drawImage(img, -125, state.top, -25, 50);
-            context.restore();
+            renderPlayer(context, state.top);
+            return;
+        case GameStateTypes.Oops:
+            renderPlayer(context, state.top);
+            context.font = "80px Arial";
+            context.fillText("Oops", 640, 400);
             return;
     }
 
     assertUnreachable(state);
+}
+
+function renderPlayer(context: CanvasRenderingContext2D, top: number) {
+    const img = imgs[Math.floor((window.performance.now() / PlayerLeft) % imgs.length)];
+    context.drawImage(img, 100, top, PlayerWidth * 0.5, PlayerHeight);
+    context.save();
+    context.scale(-1, 1);
+    context.drawImage(img, -125, top, PlayerWidth * -0.5, PlayerHeight);
+    context.restore();
 }
