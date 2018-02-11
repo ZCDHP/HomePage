@@ -1,6 +1,10 @@
 import * as React from "react";
 import { assertUnreachable } from "./util";
-import { PlayerHeight, PlayerWidth, PlayerLeft, GameState, DefaultState, GameStateTypes, frame, click } from './state';
+import {
+    PlayerHeight, PlayerWidth, PlayerLeft, CheckAreaWidth, CheckAreaHeight,
+    GameState, DefaultState, GameStateTypes, CheckArea,
+    frame, click
+} from './state';
 
 const imgs = [
     "0.png",
@@ -50,10 +54,13 @@ function renderState(context: CanvasRenderingContext2D, state: GameState) {
             context.fillText("Click To Start", 520, 400);
             return;
         case GameStateTypes.Flapping:
+            state.CheckAreas.forEach(a => renderCheckArea(context, a));
             renderPlayer(context, state.top);
             return;
         case GameStateTypes.Oops:
+            state.CheckAreas.forEach(a => renderCheckArea(context, a));
             renderPlayer(context, state.top);
+            context.fillStyle = "green";
             context.font = "80px Arial";
             context.fillText("Oops", 640, 400);
             return;
@@ -69,4 +76,10 @@ function renderPlayer(context: CanvasRenderingContext2D, top: number) {
     context.scale(-1, 1);
     context.drawImage(img, -125, top, PlayerWidth * -0.5, PlayerHeight);
     context.restore();
+}
+
+function renderCheckArea(context: CanvasRenderingContext2D, area: CheckArea) {
+    context.fillStyle = "black";
+    context.fillRect(area.left, 0, CheckAreaWidth, area.top);
+    context.fillRect(area.left, area.top + CheckAreaHeight, CheckAreaWidth, 1600 - area.top - CheckAreaHeight);
 }
