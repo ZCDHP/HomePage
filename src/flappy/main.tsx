@@ -1,5 +1,6 @@
 import * as React from "react";
-import { FlappyState, DefaultState, frame, click } from './state';
+import { assertUnreachable } from "./util";
+import { GameState, DefaultState, GameStateTypes, frame, click } from './state';
 
 const imgs = [
     "0.png",
@@ -14,7 +15,7 @@ const imgs = [
 
 export class Main extends React.Component<{ id: string }>{
     render() {
-        return <canvas id={this.props.id} onClick={() => this.flappyState = click(this.flappyState)}></canvas>
+        return <canvas id={this.props.id} onClick={() => this.gameState = click(this.gameState)}></canvas>
     }
 
     async componentDidMount() {
@@ -26,9 +27,9 @@ export class Main extends React.Component<{ id: string }>{
         context.scale(context.canvas.width / 1600, context.canvas.height / 900)
 
         const onFrame = (currentMS: number, lastMS: number) => {
-            this.flappyState = frame(currentMS - lastMS, this.flappyState);
+            this.gameState = frame(currentMS - lastMS, this.gameState);
 
-            renderState(this.renderContext as CanvasRenderingContext2D, this.flappyState);
+            renderState(this.renderContext as CanvasRenderingContext2D, this.gameState);
             requestAnimationFrame(nextMS => onFrame(nextMS, currentMS));
         };
 
@@ -37,15 +38,26 @@ export class Main extends React.Component<{ id: string }>{
     }
 
     renderContext: CanvasRenderingContext2D | null = null
-    flappyState = DefaultState
+    gameState = DefaultState
 }
 
-function renderState(context: CanvasRenderingContext2D, state: FlappyState) {
+function renderState(context: CanvasRenderingContext2D, state: GameState) {
     context.clearRect(0, 0, 1600, 900);
-    const img = imgs[Math.floor((state.totalMS / 100) % imgs.length)];
-    context.drawImage(img, 100, state.top, 25, 50);
-    context.save();
-    context.scale(-1, 1);
-    context.drawImage(img, -125, state.top, -25, 50);
-    context.restore();
+
+    switch (state.type) {
+        case GameStateTypes.ClickToStart:
+            context.font = "80px Arial";
+            context.fillText("Click To Start", 520, 400);
+            return;
+        case GameStateTypes.Flapping:
+            const img = imgs[Math.floor((state.totalMS / 100) % imgs.length)];
+            context.drawImage(img, 100, state.top, 25, 50);
+            context.save();
+            context.scale(-1, 1);
+            context.drawImage(img, -125, state.top, -25, 50);
+            context.restore();
+            return;
+    }
+
+    assertUnreachable(state);
 }
