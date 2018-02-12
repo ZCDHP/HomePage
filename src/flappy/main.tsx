@@ -21,7 +21,7 @@ export class Main extends React.Component<{ id: string }>{
     render() {
         return (
             <div className="Game">
-                <canvas id={this.props.id} onClick={() => this.gameState = click(this.gameState)}></canvas>
+                <canvas id={this.props.id} onClick={e => this.gameState = click(this.gameState)}></canvas>
                 <button onClick={_ => this.gameState = DefaultState}>New Game</button>
             </div>)
     }
