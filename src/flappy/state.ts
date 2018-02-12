@@ -4,14 +4,14 @@ import LineSegment from './linear/lineSegment';
 import Vector from "./linear/vector";
 
 const g = 0.001; // px/ms^2
-const vRise = -0.5 // px/ms
+const vRise = -0.4 // px/ms
 const vForward = -0.1;
 export const PlayerHeight = 50;
 export const PlayerWidth = 50;
 export const PlayerLeft = 100;
 export const CheckAreaWidth = 75;
 export const CheckAreaHeight = 150;
-const CheckAreaInterval = 100;
+const CheckAreaInterval = 200;
 
 export const GameStateTypes = strEnum(["ClickToStart", "Flapping", "Oops"]);
 type GameStateTypes = keyof typeof GameStateTypes;
