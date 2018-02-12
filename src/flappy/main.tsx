@@ -59,15 +59,17 @@ function renderState(context: CanvasRenderingContext2D, state: GameState) {
             context.fillText("Click To Start", 520, 400);
             return;
         case GameStateTypes.Flapping:
-            state.CheckAreas.forEach(a => renderCheckArea(context, a));
+            state.checkAreas.forEach(a => renderCheckArea(context, a));
             renderPlayer(context, state.top);
+            renderScore(context, state.score);
             return;
         case GameStateTypes.Oops:
-            state.CheckAreas.forEach(a => renderCheckArea(context, a));
+            state.checkAreas.forEach(a => renderCheckArea(context, a));
             renderPlayer(context, state.top);
             context.fillStyle = "green";
             context.font = "80px Arial";
             context.fillText("Oops", 640, 400);
+            context.fillText(`Your Score: ${state.score}`, 500, 500);
             return;
     }
 
@@ -87,4 +89,10 @@ function renderCheckArea(context: CanvasRenderingContext2D, area: CheckArea) {
     context.fillStyle = "black";
     context.fillRect(area.left, 0, CheckAreaWidth, area.top);
     context.fillRect(area.left, area.top + CheckAreaHeight, CheckAreaWidth, 1600 - area.top - CheckAreaHeight);
+}
+
+function renderScore(context: CanvasRenderingContext2D, score: number) {
+    context.fillStyle = "green";
+    context.font = "40px Arial";
+    context.fillText(score.toString(), 60, 60);
 }

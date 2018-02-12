@@ -34,13 +34,15 @@ interface Flapping {
     type: typeof GameStateTypes.Flapping
     top: number
     velocity: number
-    CheckAreas: Array<CheckArea>
+    checkAreas: Array<CheckArea>
+    score: number
 }
 
 interface Oops {
     type: typeof GameStateTypes.Oops
     top: number
-    CheckAreas: Array<CheckArea>
+    checkAreas: Array<CheckArea>
+    score: number
 }
 
 export const DefaultState: GameState = { type: GameStateTypes.ClickToStart };
@@ -50,7 +52,8 @@ function FlappingStart(): Flapping {
         type: GameStateTypes.Flapping,
         top: 500,
         velocity: 0,
-        CheckAreas: Array.from(InitCheckAreas())
+        checkAreas: Array.from(InitCheckAreas()),
+        score: 0
     };
 }
 
@@ -76,9 +79,13 @@ function flappingFrame(passedMS: number, oldState: Flapping): GameState {
     const currentVelocity = oldState.velocity + passedMS * g;
     const currentTop = oldState.top + (currentVelocity + oldState.velocity) * 0.5 * passedMS;
 
-    const currentCheckAreas = oldState.CheckAreas.map(x => {
+    const currentCheckAreas = oldState.checkAreas.map(x => {
         return { top: x.top, left: x.left + passedMS * vForward };
     });
+
+    const currentScore = oldState.score +
+        (currentCheckAreas.filter(x => x.left + CheckAreaWidth < PlayerLeft).length - oldState.checkAreas.filter(x => x.left + CheckAreaWidth < PlayerLeft).length);
+
     while (currentCheckAreas.length > 0 && currentCheckAreas[0].left + CheckAreaWidth < 0)
         currentCheckAreas.shift();
     if (1600 - currentCheckAreas[currentCheckAreas.length - 1].left > CheckAreaWidth + CheckAreaInterval)
@@ -94,14 +101,16 @@ function flappingFrame(passedMS: number, oldState: Flapping): GameState {
             type: GameStateTypes.Flapping,
             top: currentTop,
             velocity: currentVelocity,
-            CheckAreas: currentCheckAreas
+            checkAreas: currentCheckAreas,
+            score: currentScore
         };
     }
     else
         return {
             type: GameStateTypes.Oops,
             top: currentTop,
-            CheckAreas: oldState.CheckAreas
+            checkAreas: oldState.checkAreas,
+            score: oldState.score
         };
 }
 
@@ -113,7 +122,8 @@ export function click(oldState: GameState): GameState {
                 type: GameStateTypes.Flapping,
                 top: oldState.top,
                 velocity: vRise,
-                CheckAreas: oldState.CheckAreas
+                checkAreas: oldState.checkAreas,
+                score: oldState.score
             };
         case GameStateTypes.Oops: return oldState;
     }
