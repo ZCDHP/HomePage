@@ -7,5 +7,5 @@ import { Main as Flappy } from './flappy/main'
 document.addEventListener('DOMContentLoaded', () => {
     ReactDom.render(
         <Flappy id="flappy" />,
-        document.body);
+        document.getElementById("content"));
 });

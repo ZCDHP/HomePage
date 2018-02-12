@@ -20,10 +20,20 @@ const imgs = [
 export class Main extends React.Component<{ id: string }>{
     render() {
         return (
-            <div className="Game">
-                <canvas id={this.props.id} onClick={e => this.gameState = click(this.gameState)}></canvas>
-                <button onClick={_ => this.gameState = DefaultState}>New Game</button>
-            </div>)
+            <div className="container-fluid text-center">
+                <h1>Flapping</h1>
+                <div className="row">
+                    <canvas
+                        id={this.props.id}
+                        className="col-md-12 col-lg-10 offset-lg-1 col-xl-8 offset-xl-2"
+                        onClick={e => this.gameState = click(this.gameState)}
+                    />
+                </div>
+                <button
+                    type="button"
+                    className="btn btn-outline-dark mt-1 mb-1"
+                    onClick={_ => this.gameState = DefaultState}>New Game</button>
+            </div >)
     }
 
     async componentDidMount() {

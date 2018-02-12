@@ -2,59 +2,38 @@
 <html lang="en">
 
 <head>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm"
+        crossorigin="anonymous">
     <style>
-        * {
-            padding: 0px;
-            margin: 0px;
-            box-sizing: border-box;
+        #header,
+        #body,
+        #content,
+        #sidebar,
+        #footer {
+            padding: 0em;
         }
 
         canvas {
-            width: 50%;
             border: 1px solid black;
-            display: block;
-            margin-left: auto;
-            margin-right: auto;
-            margin-top: 2em;
-        }
-
-        button {
-            width: 25%;
-            display: block;
-            margin-left: auto;
-            margin-right: auto;
-            margin-top: 2em;
-        }
-
-        @media (max-width: 1200px) {
-            canvas {
-                width: 80%;
-            }
-            button {
-                width: 40%;
-            }
-        }
-
-        @media (max-width:800px) {
-            canvas {
-                width: 100%;
-            }
-            button {
-                width: 50%;
-            }
         }
     </style>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
+
     <script src="https://cdn.bootcss.com/react/16.3.0-alpha.0/umd/react.production.min.js"></script>
     <script src="https://cdn.bootcss.com/react-dom/16.3.0-alpha.0/umd/react-dom.production.min.js"></script>
     <script type="text/javascript" src="./index.js"></script>
-    <title>Document</title>
+    <title>ZCDHP's Home Page</title>
 </head>
 
 <body>
-
+    <div id="header" class="container-fluid" style="background-color:green">Header Here</div>
+    <div id="body" class="row">
+        <div id="content" class="col-lg-10 col-xl-9"></div>
+        <div id="sidebar" class="d-none d-lg-block col-lg-2 col-xl-3" style="background-color:blue">sidebar</div>
+    </div>
+    <div id="footer" class="container-fluid" style="background-color:pink">footer</div>
 </body>
 
 </html>
