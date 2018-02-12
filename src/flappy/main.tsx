@@ -19,7 +19,11 @@ const imgs = [
 
 export class Main extends React.Component<{ id: string }>{
     render() {
-        return <canvas id={this.props.id} onClick={() => this.gameState = click(this.gameState)}></canvas>
+        return (
+            <div className="Game">
+                <canvas id={this.props.id} onClick={() => this.gameState = click(this.gameState)}></canvas>
+                <button onClick={_ => this.gameState = DefaultState}>New Game</button>
+            </div>)
     }
 
     async componentDidMount() {
@@ -50,6 +54,7 @@ function renderState(context: CanvasRenderingContext2D, state: GameState) {
 
     switch (state.type) {
         case GameStateTypes.ClickToStart:
+            context.fillStyle = "green";
             context.font = "80px Arial";
             context.fillText("Click To Start", 520, 400);
             return;

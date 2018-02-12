@@ -105,7 +105,7 @@ function flappingFrame(passedMS: number, oldState: Flapping): GameState {
         };
 }
 
-export function click(oldState: GameState): Flapping {
+export function click(oldState: GameState): GameState {
     switch (oldState.type) {
         case GameStateTypes.ClickToStart: return FlappingStart();
         case GameStateTypes.Flapping:
@@ -115,7 +115,7 @@ export function click(oldState: GameState): Flapping {
                 velocity: vRise,
                 CheckAreas: oldState.CheckAreas
             };
-        case GameStateTypes.Oops: return FlappingStart();
+        case GameStateTypes.Oops: return oldState;
     }
 
     assertUnreachable(oldState);
