@@ -32,9 +32,8 @@ export class Main extends React.Component<{ id: string }>{
         canvas.onselectstart = _ => false;
         const context = canvas.getContext("2d") as CanvasRenderingContext2D;
         this.renderContext = context;
-        context.canvas.height = context.canvas.clientHeight;
-        context.canvas.width = context.canvas.clientWidth;
-        context.scale(context.canvas.width / 1600, context.canvas.height / 900)
+        window.onresize = _ => resizeCanves(context);
+        resizeCanves(context);
 
         const onFrame = (currentMS: number, lastMS: number) => {
             this.gameState = frame(currentMS - lastMS, this.gameState);
@@ -49,6 +48,15 @@ export class Main extends React.Component<{ id: string }>{
 
     renderContext: CanvasRenderingContext2D | null = null
     gameState = DefaultState
+}
+
+
+function resizeCanves(context: CanvasRenderingContext2D) {
+    context.canvas.width = context.canvas.clientWidth;
+    context.canvas.height = context.canvas.clientWidth / 16 * 9;
+    context.canvas.style.height = `${context.canvas.height}px`;
+    const scale = context.canvas.clientWidth / 1600;
+    context.setTransform(scale, 0, 0, scale, 0, 0);
 }
 
 function renderState(context: CanvasRenderingContext2D, state: GameState) {
