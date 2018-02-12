@@ -28,7 +28,9 @@ export class Main extends React.Component<{ id: string }>{
 
     async componentDidMount() {
         await Promise.all(imgs.map(i => new Promise((resolve, _) => i.onload = resolve)));
-        const context = (document.getElementById(this.props.id) as HTMLCanvasElement).getContext("2d") as CanvasRenderingContext2D;
+        const canvas = document.getElementById(this.props.id) as HTMLCanvasElement;
+        canvas.onselectstart = _ => false;
+        const context = canvas.getContext("2d") as CanvasRenderingContext2D;
         this.renderContext = context;
         context.canvas.height = context.canvas.clientHeight;
         context.canvas.width = context.canvas.clientWidth;
