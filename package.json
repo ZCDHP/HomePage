@@ -5,15 +5,20 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "./node_modules/.bin/webpack ./webpack.config.js && cp ./src/index.html ./dist/index.html && mkdir -p ./dist/flappy/ && cp -a ./src/flappy/asset/. ./dist/flappy/"
+    "build-dev": "./node_modules/.bin/webpack --config ./webpack.dev.js && npm run assets",
+    "build-prod": "./node_modules/.bin/webpack --config ./webpack.prod.js && npm run assets",
+    "assets": "cp ./src/index.html ./dist/index.html && mkdir -p ./dist/flappy/ && cp -a ./src/flappy/asset/. ./dist/flappy/"
   },
   "author": "",
   "license": "ISC",
   "devDependencies": {
     "@types/react": "^16.0.36",
     "@types/react-dom": "^16.0.3",
+    "clean-webpack-plugin": "^0.1.18",
     "ts-loader": "^3.5.0",
     "typescript": "^2.7.1",
-    "webpack": "^3.10.0"
+    "uglifyjs-webpack-plugin": "^1.1.8",
+    "webpack": "^3.10.0",
+    "webpack-merge": "^4.1.1"
   }
 }
