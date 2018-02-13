@@ -29,7 +29,6 @@ export class Main extends React.Component<{ id: string }>{
     render() {
         return (
             <div className="container-fluid text-center">
-                <h1>Flapping</h1>
                 <div className="row">
                     <canvas
                         id={this.props.id}

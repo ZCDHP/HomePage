@@ -8,6 +8,7 @@ interface GameDescription {
     description: string
     coverPath: string
     constructor: (id: string) => React.ReactElement<{ id: string }>
+    publishDate: Date
 }
 
 class GameEntry extends React.Component<{ game: GameDescription, onGameSelected: (game: GameDescription) => void }> {
@@ -19,7 +20,8 @@ class GameEntry extends React.Component<{ game: GameDescription, onGameSelected:
                 <img src={this.props.game.coverPath} alt="Game Cover" style={{ width: "400px", minWidth: "400px", height: "225px" }} />
                 <div className="text-center text-md-left mt-4 ml-4" style={{ whiteSpace: "normal" }}>
                     <h3>{this.props.game.name}</h3>
-                    {this.props.game.description}
+                    <p className="publish-date font-weight-light">{this.props.game.publishDate.toLocaleDateString()}</p>
+                    <p>{this.props.game.description}</p>
                 </div>
             </div>
         );
@@ -60,7 +62,9 @@ class Index extends React.Component<{ games: GameDescription[] }, { playing: Gam
         else
             return (
                 <div id="body" className="row">
-                    <div id="content" className="col-lg-10 col-xl-9">
+                    <div id="content" className="col-lg-10 col-xl-9 text-center">
+                        <h1> {this.state.playing.name}</h1>
+                        <p className="publish-date font-weight-light">{this.state.playing.publishDate.toLocaleDateString()}</p>
                         {this.state.playing.constructor("game")}
                     </div>
                     <div id="sidebar" className="col-lg-2 col-xl-3 pt-5">
@@ -79,7 +83,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 name: "Flappy",
                 description: "A simple and crude imitation to Flappy Bird.",
                 coverPath: "./flappy/cover.png",
-                constructor: id => <Flappy id={id} />
+                constructor: id => <Flappy id={id} />,
+                publishDate: new Date("2018-02-13")
             }
         ]} />,
         document.body);
