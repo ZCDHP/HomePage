@@ -32,7 +32,7 @@ export class Main extends React.Component<{ id: string }>{
                 <div className="row">
                     <canvas
                         id={this.props.id}
-                        className="col-md-12 col-lg-10 offset-lg-1"
+                        className="col-md-12 col-xl-10 offset-xl-1"
                         onClick={e => this.gameState = click(this.gameState)}
                     />
                 </div>
@@ -75,6 +75,8 @@ function resizeCanves(context: CanvasRenderingContext2D) {
 
 function renderState(playerImgs: HTMLImageElement[], context: CanvasRenderingContext2D, state: GameState) {
     context.clearRect(0, 0, 1600, 900);
+    context.fillStyle = "white";
+    context.fillRect(0, 0, 1600, 900);
 
     switch (state.type) {
         case GameStateTypes.ClickToStart:

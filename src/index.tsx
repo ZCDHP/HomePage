@@ -62,12 +62,12 @@ class Index extends React.Component<{ games: GameDescription[] }, { playing: Gam
         else
             return (
                 <div id="body" className="row">
-                    <div id="content" className="col-lg-10 col-xl-9 text-center">
+                    <div id="content" className="col-lg-8 offset-lg-1 text-center">
                         <h1> {this.state.playing.name}</h1>
                         <p className="publish-date font-weight-light">{this.state.playing.publishDate.toLocaleDateString()}</p>
                         {this.state.playing.constructor("game")}
                     </div>
-                    <div id="sidebar" className="col-lg-2 col-xl-3 pt-5">
+                    <div id="sidebar" className="col-lg-2 pt-5">
                         <p><a href="https://github.com/ZCDHP/HomePage/issues/new" target="_blank">Bug!</a></p>
                         <p>Created by <a href="https://github.com/ZCDHP" target="_blank">ZCDHP</a></p>
                     </div>
