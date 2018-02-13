@@ -6,16 +6,24 @@ import {
     frame, click
 } from './state';
 
-const imgs = [
-    "0.png",
-    "1.png",
-    "2.png",
-    "3.png"
-].map(n => {
-    const img = new Image();
-    img.src = `./flappy/${n}`;
-    return img;
-});
+async function PlayerImgs() {
+    return Promise.all(
+        [
+            "0.png",
+            "1.png",
+            "2.png",
+            "3.png"
+        ].map(n => {
+            const img = new Image();
+            const promise = new Promise<HTMLImageElement>((resolve, reject) => {
+                img.onload = _ => resolve(img);
+                img.onerror = reject;
+            });
+            img.src = `./flappy/${n}`;
+            return promise;
+        })
+    );
+}
 
 export class Main extends React.Component<{ id: string }>{
     render() {
@@ -37,7 +45,7 @@ export class Main extends React.Component<{ id: string }>{
     }
 
     async componentDidMount() {
-        await Promise.all(imgs.map(i => new Promise((resolve, _) => i.onload = resolve)));
+        const playerImgs = await PlayerImgs();
         const canvas = document.getElementById(this.props.id) as HTMLCanvasElement;
         canvas.onselectstart = _ => false;
         const context = canvas.getContext("2d") as CanvasRenderingContext2D;
@@ -48,7 +56,7 @@ export class Main extends React.Component<{ id: string }>{
         const onFrame = (currentMS: number, lastMS: number) => {
             this.gameState = frame(currentMS - lastMS, this.gameState);
 
-            renderState(this.renderContext as CanvasRenderingContext2D, this.gameState);
+            renderState(playerImgs, this.renderContext as CanvasRenderingContext2D, this.gameState);
             requestAnimationFrame(nextMS => onFrame(nextMS, currentMS));
         };
 
@@ -56,10 +64,11 @@ export class Main extends React.Component<{ id: string }>{
         requestAnimationFrame(nextMS => onFrame(nextMS, startTime));
     }
 
-    renderContext: CanvasRenderingContext2D | null = null
-    gameState = DefaultState
-}
+    renderContext: CanvasRenderingContext2D | null = null;
+    gameState = DefaultState;
 
+
+}
 
 function resizeCanves(context: CanvasRenderingContext2D) {
     context.canvas.width = context.canvas.clientWidth;
@@ -69,7 +78,7 @@ function resizeCanves(context: CanvasRenderingContext2D) {
     context.setTransform(scale, 0, 0, scale, 0, 0);
 }
 
-function renderState(context: CanvasRenderingContext2D, state: GameState) {
+function renderState(playerImgs: HTMLImageElement[], context: CanvasRenderingContext2D, state: GameState) {
     context.clearRect(0, 0, 1600, 900);
 
     switch (state.type) {
@@ -80,24 +89,23 @@ function renderState(context: CanvasRenderingContext2D, state: GameState) {
             return;
         case GameStateTypes.Flapping:
             state.checkAreas.forEach(a => renderCheckArea(context, a));
-            renderPlayer(context, state.top);
+            renderPlayer(playerImgs, context, state.top);
             renderScore(context, state.score);
             return;
         case GameStateTypes.Oops:
             state.checkAreas.forEach(a => renderCheckArea(context, a));
-            renderPlayer(context, state.top);
+            renderPlayer(playerImgs, context, state.top);
             context.fillStyle = "green";
             context.font = "80px Arial";
             context.fillText("Oops", 640, 400);
             context.fillText(`Your Score: ${state.score}`, 500, 500);
             return;
     }
-
     assertUnreachable(state);
 }
 
-function renderPlayer(context: CanvasRenderingContext2D, top: number) {
-    const img = imgs[Math.floor((window.performance.now() / PlayerLeft) % imgs.length)];
+function renderPlayer(playerImgs: HTMLImageElement[], context: CanvasRenderingContext2D, top: number) {
+    const img = playerImgs[Math.floor((window.performance.now() / PlayerLeft) % playerImgs.length)];
     context.drawImage(img, 100, top, PlayerWidth * 0.5, PlayerHeight);
     context.save();
     context.scale(-1, 1);
