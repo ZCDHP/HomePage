@@ -33,7 +33,7 @@ export class Main extends React.Component<{ id: string }>{
                 <div className="row">
                     <canvas
                         id={this.props.id}
-                        className="col-md-12 col-lg-10 offset-lg-1 col-xl-8 offset-xl-2"
+                        className="col-md-12 col-lg-10 offset-lg-1"
                         onClick={e => this.gameState = click(this.gameState)}
                     />
                 </div>
@@ -49,14 +49,13 @@ export class Main extends React.Component<{ id: string }>{
         const canvas = document.getElementById(this.props.id) as HTMLCanvasElement;
         canvas.onselectstart = _ => false;
         const context = canvas.getContext("2d") as CanvasRenderingContext2D;
-        this.renderContext = context;
         window.onresize = _ => resizeCanves(context);
         resizeCanves(context);
 
         const onFrame = (currentMS: number, lastMS: number) => {
             this.gameState = frame(currentMS - lastMS, this.gameState);
 
-            renderState(playerImgs, this.renderContext as CanvasRenderingContext2D, this.gameState);
+            renderState(playerImgs, context, this.gameState);
             requestAnimationFrame(nextMS => onFrame(nextMS, currentMS));
         };
 
@@ -64,10 +63,7 @@ export class Main extends React.Component<{ id: string }>{
         requestAnimationFrame(nextMS => onFrame(nextMS, startTime));
     }
 
-    renderContext: CanvasRenderingContext2D | null = null;
     gameState = DefaultState;
-
-
 }
 
 function resizeCanves(context: CanvasRenderingContext2D) {

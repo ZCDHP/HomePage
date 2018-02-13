@@ -41,9 +41,15 @@ class Index extends React.Component<{ games: GameDescription[] }, { playing: Gam
     render() {
         return (
             <div id="main" className="container-fluid p-0">
-                <div id="header" className="container-fluid text-center" style={{ backgroundColor: "green" }}>Header</div>
+                <div id="header" className="container-fluid text-center">
+                    <nav className="nav" >
+                        <a className="nav-link active" href="">Home</a>
+                    </nav>
+                </div>
                 {this.renderBody()}
-                <div id="footer" className="container-fluid text-center" style={{ backgroundColor: "green" }}>Footer</div>
+                <div id="footer" className="container-fluid text-center">
+                    Host on <a href="https://pages.github.com/">GitHub Pages</a>
+                </div>
             </div>
         );
     }
@@ -57,7 +63,10 @@ class Index extends React.Component<{ games: GameDescription[] }, { playing: Gam
                     <div id="content" className="col-lg-10 col-xl-9">
                         {this.state.playing.constructor("game")}
                     </div>
-                    <div id="sidebar" className="d-none d-lg-block col-lg-2 col-xl-3" style={{ backgroundColor: "blue" }}>Sidebar</div>
+                    <div id="sidebar" className="col-lg-2 col-xl-3 pt-5">
+                        <p><a href="https://github.com/ZCDHP/HomePage/issues/new" target="_blank">Bug!</a></p>
+                        <p>Created by <a href="https://github.com/ZCDHP">ZCDHP</a></p>
+                    </div>
                 </div>
             )
     }
