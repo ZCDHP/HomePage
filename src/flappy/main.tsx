@@ -1,5 +1,5 @@
 import * as React from "react";
-import { assertUnreachable } from "./util";
+import { assertUnreachable, scaleCanvas } from "../util";
 import {
     PlayerHeight, PlayerWidth, PlayerLeft, CheckAreaWidth, CheckAreaHeight,
     GameState, DefaultState, GameStateTypes, CheckArea,
@@ -48,8 +48,8 @@ export class Main extends React.Component<{ id: string }>{
         const canvas = document.getElementById(this.props.id) as HTMLCanvasElement;
         canvas.onselectstart = _ => false;
         const context = canvas.getContext("2d") as CanvasRenderingContext2D;
-        window.onresize = _ => resizeCanves(context);
-        resizeCanves(context);
+        window.onresize = _ => scaleCanvas(context, 1600, 900);
+        scaleCanvas(context, 1600, 900);
 
         const onFrame = (currentMS: number, lastMS: number) => {
             this.gameState = frame(currentMS - lastMS, this.gameState);
@@ -63,14 +63,6 @@ export class Main extends React.Component<{ id: string }>{
     }
 
     gameState = DefaultState;
-}
-
-function resizeCanves(context: CanvasRenderingContext2D) {
-    context.canvas.width = context.canvas.clientWidth;
-    context.canvas.height = context.canvas.clientWidth / 16 * 9;
-    context.canvas.style.height = `${context.canvas.height}px`;
-    const scale = context.canvas.clientWidth / 1600;
-    context.setTransform(scale, 0, 0, scale, 0, 0);
 }
 
 function renderState(playerImgs: HTMLImageElement[], context: CanvasRenderingContext2D, state: GameState) {

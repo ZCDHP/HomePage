@@ -1,5 +1,6 @@
 import * as React from "react";
 import { gameStart, forEach, GameState, Cell } from "./state";
+import { scaleCanvas } from "../util";
 
 const Gap = 20;
 const CellWidth = (900 - Gap * 5) / 4;
@@ -21,8 +22,8 @@ export class Game extends React.Component<{ id: string }>{
         const canvas = document.getElementById(this.props.id) as HTMLCanvasElement;
         canvas.onselectstart = _ => false;
         const context = canvas.getContext("2d") as CanvasRenderingContext2D;
-        window.onresize = _ => resizeCanves(context);
-        resizeCanves(context);
+        window.onresize = _ => scaleCanvas(context, 900, 900);
+        scaleCanvas(context, 900, 900);
 
         const onFrame = (currentMS: number, lastMS: number) => {
             //this.gameState = frame(currentMS - lastMS, this.gameState);
@@ -43,14 +44,6 @@ export class Game extends React.Component<{ id: string }>{
             [null, null, null, null]
         ]
     } //= gameStart();
-}
-
-function resizeCanves(context: CanvasRenderingContext2D) {
-    context.canvas.width = context.canvas.clientWidth;
-    context.canvas.height = context.canvas.clientWidth
-    context.canvas.style.height = `${context.canvas.height}px`;
-    const scale = context.canvas.clientWidth / 900;
-    context.setTransform(scale, 0, 0, scale, 0, 0);
 }
 
 function renderState(context: CanvasRenderingContext2D, state: GameState) {

@@ -1,4 +1,4 @@
-import { strEnum, assertUnreachable } from "./util"
+import { strEnum, assertUnreachable } from "../util"
 import Vactor from './linear/vector';
 import LineSegment from './linear/lineSegment';
 import Vector from "./linear/vector";
