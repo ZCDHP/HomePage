@@ -17,8 +17,8 @@ class GameEntry extends React.Component<{ game: GameDescription, onGameSelected:
             <div
                 className="btn btn-light mt-3 d-flex flex-column flex-md-row align-items-center align-items-md-start w-100"
                 onClick={_ => this.props.onGameSelected(this.props.game)}>
-                <img src={this.props.game.coverPath} alt="Game Cover" style={{ width: "400px", minWidth: "400px", height: "225px" }} />
-                <div className="text-center text-md-left mt-4 ml-4" style={{ whiteSpace: "normal" }}>
+                <img className="mx-auto" src={this.props.game.coverPath} alt="Game Cover" style={{ width: "400px", minWidth: "400px", height: "225px" }} />
+                <div className="container-fluid text-center text-md-left mt-4 ml-md-4" style={{ whiteSpace: "normal" }}>
                     <h3>{this.props.game.name}</h3>
                     <p className="publish-date font-weight-light">{this.props.game.publishDate.toLocaleDateString()}</p>
                     <p>{this.props.game.description}</p>
