@@ -65,7 +65,7 @@ class Index extends React.Component<{ games: GameDescription[] }, { playing: Gam
                     </div>
                     <div id="sidebar" className="col-lg-2 col-xl-3 pt-5">
                         <p><a href="https://github.com/ZCDHP/HomePage/issues/new" target="_blank">Bug!</a></p>
-                        <p>Created by <a href="https://github.com/ZCDHP">ZCDHP</a></p>
+                        <p>Created by <a href="https://github.com/ZCDHP" target="_blank">ZCDHP</a></p>
                     </div>
                 </div>
             )
@@ -78,12 +78,6 @@ document.addEventListener('DOMContentLoaded', () => {
             {
                 name: "Flappy",
                 description: "A simple and crude imitation to Flappy Bird.",
-                coverPath: "./flappy/cover.png",
-                constructor: id => <Flappy id={id} />
-            },
-            {
-                name: "Flappy",
-                description: "A simple and crude imit atasdfa sdfasdf asdf asdfasio asd fasdfsdf asn to Flappy Bird.",
                 coverPath: "./flappy/cover.png",
                 constructor: id => <Flappy id={id} />
             }
