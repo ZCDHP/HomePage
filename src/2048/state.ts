@@ -23,43 +23,63 @@ export interface MovePath {
     to: Vector
 }
 
+type Located<T> = Vector & T;
+type LocatedCell = Located<{ cell: Cell }>
+type LocatedNumber = Located<{ cell: number }>
+
 export interface MoveResult {
     gameState: GameState
     moved: List<MovePath>
-    generated: List<LocatedCell>
+    generated: List<LocatedNumber>
 }
 
 export function gameStart(): GameState {
-    const cells = tryAddNewCell(tryAddNewCell(EmptyBoard) as Cell[][]) as Cell[][];
-    return { cells };
+    const cell1 = tryGenerateNewCell(EmptyBoard);
+    const cells1 = set(EmptyBoard, cell1 as LocatedNumber);
+    const cell2 = tryGenerateNewCell(cells1);
+    const cells2 = set(cells1, cell2 as LocatedNumber);
+    return { cells: cells2 };
 }
 
-export function move(oldState: GameState, dir: MoveDirections) {
+export function move(oldState: GameState, dir: MoveDirections): MoveResult {
     const vector = moveVector(dir);
-    return toArray(oldState.cells)
+    const moveResult = locatedNumbers(oldState.cells)
         .sort((a, b) => b.x * vector.x + b.y * vector.y - (a.x * vector.x + a.y * vector.y))
         .reduce<MoveResult>((result, cell) => {
-            const { cells, path, generated } = moveCellStep(result.gameState.cells, cell, vector);
+            const { cells, path, generated } = moveCellStep(result!.gameState.cells, cell!, vector);
             return {
                 gameState: { cells },
                 moved: path ?
-                    result.moved.push(path) : result.moved,
+                    result!.moved.push(path) : result!.moved,
                 generated: generated ?
-                    result.generated.push(generated) : result.generated
+                    result!.generated.push(generated) : result!.generated
             };
         }, { gameState: oldState, moved: List(), generated: List() });
+
+    if (moveResult.moved.count() > 0) {
+        const newCell = tryGenerateNewCell(moveResult.gameState.cells);
+        if (newCell == false)
+            throw new Error("Never");
+        return {
+            gameState: { cells: set(moveResult.gameState.cells, newCell) },
+            moved: moveResult.moved,
+            generated: moveResult.generated.push(newCell)
+        };
+    }
+    else
+        return moveResult;
 }
 
-function moveCellStep(cells: Cell[][], cell: LocatedCell, moveVector: Vector, path?: MovePath)
-    : { cells: Cell[][], path?: MovePath, generated?: LocatedCell } {
+function moveCellStep(cells: Cell[][], cell: LocatedNumber, moveVector: Vector, path?: MovePath)
+    : { cells: Cell[][], path?: MovePath, generated?: LocatedNumber } {
     const currentPath = path == null ? {
         from: cell,
         to: Vector.add(cell, moveVector),
-        number: cell.number
+        number: cell.cell
     } : {
             from: path.from,
             to: Vector.add(path.to, moveVector),
-            number: cell.number
+            number: cell.cell
         };
 
     if (outOfBoard(currentPath.to))
@@ -72,21 +92,20 @@ function moveCellStep(cells: Cell[][], cell: LocatedCell, moveVector: Vector, pa
     if (hittedCell == null)
         return moveCellStep(cells, cell, moveVector, currentPath)
     else {
-        if (hittedCell != cell.number)
+        if (hittedCell != cell.cell)
             return {
                 cells: path == null ? cells : mapPath(cells, path),
                 path
             };
         else
             return {
-                cells: map(mapPath(cells, currentPath), (x, y, c) => {
-                    if (Vector.equal({ x, y }, currentPath.to))
-                        return (c as number) * 2;
-                    else
-                        return c;
+                cells: set(mapPath(cells, currentPath), {
+                    x: currentPath.to.x,
+                    y: currentPath.to.y,
+                    cell: cell.cell * 2
                 }),
-                path: path,
-                generated: { x: currentPath.to.x, y: currentPath.to.y, number: cell.number * 2 }
+                path: currentPath,
+                generated: { x: currentPath.to.x, y: currentPath.to.y, cell: cell.cell * 2 }
             };
     }
 }
@@ -103,18 +122,19 @@ function moveVector(dir: MoveDirections) {
     assertUnreachable(dir);
 }
 
-function tryAddNewCell(cells: Cell[][]): (Cell[][] | false) {
-    const empty = emptyCells(cells);
+function tryGenerateNewCell(cells: Cell[][]): (LocatedNumber | false) {
+    const empty = locatedCells(cells)
+        .filter(x => x!.cell == null)
+        .toArray();
     if (empty.length == 0)
         return false;
     else {
         const selected = randomPick(empty);
-        return map(cells, (x, y, cell) => {
-            if (x == selected.x && y == selected.y)
-                return Math.random() < 0.9 ? 2 : 4;
-            else
-                return cell;
-        });
+        return {
+            x: selected.x,
+            y: selected.y,
+            cell: Math.random() < 0.9 ? 2 : 4
+        };
     }
 }
 
@@ -122,45 +142,47 @@ function randomPick<T>(arr: T[]): T {
     return arr[Math.floor(Math.random() * arr.length)];
 }
 
-function emptyCells(cells: Cell[][]) {
-    return reduce<Array<{ x: number, y: number }>>(cells, [], (x, y, arr, cell) => {
-        if (cell == null)
-            arr.push({ x, y });
-        return arr;
-    });
+function map(cells: Cell[][], mapper: (lc: LocatedCell) => Cell) {
+    return cells.map((row, x) => row.map((cell, y) => mapper({ x, y, cell })));
 }
 
-export function map(cells: Cell[][], mapper: (x: number, y: number, cell: Cell) => Cell) {
-    return cells.map((row, x) => row.map((cell, y) => mapper(x, y, cell)));
-}
-
-export function reduce<T>(cells: Cell[][], init: T, reducer: (x: number, y: number, value: T, cell: Cell) => T) {
-    return cells.reduce((rowv, row, x) => row.reduce((cellv, cell, y) => reducer(x, y, cellv, cell), rowv), init)
+export function reduce<T>(cells: Cell[][], init: T, reducer: (lc: LocatedCell, value: T) => T) {
+    return cells.reduce((rowv, row, x) => row.reduce((cellv, cell, y) => reducer({ x, y, cell }, cellv), rowv), init)
 }
 
 export function forEach(cells: Cell[][], func: (x: number, y: number, cell: Cell) => void) {
     return cells.forEach((row, x) => row.forEach((cell, y) => func(x, y, cell)))
 }
 
-type LocatedCell = Vector & { number: number };
+function set(cells: Cell[][], toSet: LocatedCell) {
+    return map(cells, lc => Vector.equal(lc, toSet) ? toSet.cell : lc.cell);
+}
 
-function toArray(cells: Cell[][]) {
-    return reduce<LocatedCell[]>(
-        cells, [],
-        (x, y, arr, cell) => {
-            if (cell != null)
-                arr.push({ x, y, number: cell });
-            return arr;
-        })
+function locatedCells(cells: Cell[][]): List<LocatedCell> {
+    return reduce<List<LocatedCell>>(
+        cells,
+        List(),
+        (lc, list) => list.push(lc));
+}
+
+function locatedNumbers(cells: Cell[][]): List<LocatedNumber> {
+    return reduce<List<LocatedNumber>>(
+        cells,
+        List(),
+        (lc, list) => lc.cell == null ? list : list.push({ x: lc.x, y: lc.y, cell: lc.cell }));
 }
 
 function mapPath(cells: Cell[][], path: MovePath) {
-    return map(cells, (x, y, c) => {
-        if (Vector.equal({ x, y }, path.from))
-            return null;
-        else if (Vector.equal({ x, y }, path.to))
-            return path.number;
-        else
-            return c;
-    })
+    return set(
+        set(cells,
+            {
+                x: path.from.x,
+                y: path.from.y,
+                cell: null
+            },
+        ), {
+            x: path.to.x,
+            y: path.to.y,
+            cell: path.number
+        });
 }

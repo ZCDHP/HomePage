@@ -60,14 +60,7 @@ export class Game extends React.Component<{ id: string }>{
 
     drag: Vector | null = null;
 
-    gameState = {
-        cells: [
-            [2, 4, 8, 16],
-            [32, 64, 128, 256],
-            [512, 1024, 2048, null],
-            [null, null, null, null]
-        ]
-    } //= gameStart();
+    gameState = gameStart();
 }
 
 function renderState(context: CanvasRenderingContext2D, state: GameState) {
