@@ -1,5 +1,6 @@
 import { strEnum, assertUnreachable } from "../util"
 import Vector from "../flappy/linear/vector";
+import { List } from "immutable"
 
 export const MoveDirections = strEnum(["Up", "Down", "Left", "Right"]);
 type MoveDirections = keyof typeof MoveDirections;
@@ -24,8 +25,8 @@ export interface MovePath {
 
 export interface MoveResult {
     gameState: GameState
-    moved: MovePath[]
-    generated: LocatedCell[]
+    moved: List<MovePath>
+    generated: List<LocatedCell>
 }
 
 export function gameStart(): GameState {
@@ -39,13 +40,14 @@ export function move(oldState: GameState, dir: MoveDirections) {
         .sort((a, b) => b.x * vector.x + b.y * vector.y - (a.x * vector.x + a.y * vector.y))
         .reduce<MoveResult>((result, cell) => {
             const { cells, path, generated } = moveCellStep(result.gameState.cells, cell, vector);
-            result.gameState = { cells };
-            if (path)
-                result.moved.push(path);
-            if (generated)
-                result.generated.push(generated);
-            return result;
-        }, { gameState: oldState, moved: [], generated: [] });
+            return {
+                gameState: { cells },
+                moved: path ?
+                    result.moved.push(path) : result.moved,
+                generated: generated ?
+                    result.generated.push(generated) : result.generated
+            };
+        }, { gameState: oldState, moved: List(), generated: List() });
 }
 
 function moveCellStep(cells: Cell[][], cell: LocatedCell, moveVector: Vector, path?: MovePath)
