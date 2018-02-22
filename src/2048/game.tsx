@@ -1,6 +1,7 @@
 import * as React from "react";
-import { gameStart, forEach, GameState, Cell } from "./state";
+import { gameStart, forEach, GameState, Cell, move, MoveDirections } from "./state";
 import { scaleCanvas } from "../util";
+import Vector from "../flappy/linear/vector";
 
 const Gap = 20;
 const CellWidth = (900 - Gap * 5) / 4;
@@ -13,6 +14,27 @@ export class Game extends React.Component<{ id: string }>{
                     <canvas
                         id={this.props.id}
                         className="col-xs-12 col-sm-8 offset-sm-2 col-md-6 offset-md-3"
+                        onMouseDown={ev => {
+                            ev.preventDefault();
+                            this.drag = {
+                                x: ev.clientX,
+                                y: ev.clientY
+                            };
+                        }}
+                        onMouseUp={ev => {
+                            ev.preventDefault();
+                            if (this.drag == null)
+                                return;
+
+                            const offset = Vector.subtracion({
+                                x: ev.clientX,
+                                y: ev.clientY
+                            }, this.drag);
+                            if (Math.max(Math.abs(offset.x), Math.abs(offset.y)) < 50)
+                                return;
+                            this.gameState = move(this.gameState, drageOffset2Direction(offset)).gameState
+                            this.drag = null;
+                        }}
                     />
                 </div>
             </div >);
@@ -35,6 +57,8 @@ export class Game extends React.Component<{ id: string }>{
         const startTime = window.performance.now();
         requestAnimationFrame(nextMS => onFrame(nextMS, startTime));
     }
+
+    drag: Vector | null = null;
 
     gameState = {
         cells: [
@@ -73,6 +97,19 @@ function renderCell(context: CanvasRenderingContext2D, x: number, y: number, cel
         cell.toString(),
         left + CellWidth / 2,
         top + CellWidth / 2);
+}
+
+function drageOffset2Direction(offset: Vector) {
+    if (Math.abs(offset.x) > Math.abs(offset.y))
+        if (offset.x >= 0)
+            return MoveDirections.Right;
+        else
+            return MoveDirections.Left;
+    else
+        if (offset.y >= 0)
+            return MoveDirections.Down;
+        else
+            return MoveDirections.Up;
 }
 
 function cellBackgroundColor(cell: Cell): string {

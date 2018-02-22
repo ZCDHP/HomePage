@@ -9,4 +9,5 @@ export default class Vector {
     public static add = (v1: Vector, v2: Vector) => new Vector(v1.x + v2.x, v1.y + v2.y);
     public static subtracion = (v1: Vector, v2: Vector) => new Vector(v1.x - v2.x, v1.y - v2.y);
     public static dot = (v1: Vector, v2: Vector) => v1.x * v2.y - v1.y * v2.x;
+    public static equal = (v1: Vector, v2: Vector) => v1.x == v2.x && v1.y == v2.y;
 }
