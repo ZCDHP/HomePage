@@ -46,7 +46,7 @@ export function move(oldState: GameState, dir: MoveDirections): MoveResult {
     const moveResult = locatedNumbers(oldState.cells)
         .sort((a, b) => b.x * vector.x + b.y * vector.y - (a.x * vector.x + a.y * vector.y))
         .reduce<MoveResult>((result, cell) => {
-            const { cells, path, generated } = moveCellStep(result!.gameState.cells, cell!, vector);
+            const { cells, path, generated } = moveCellStep(result!.gameState.cells, cell!, vector, result!.generated);
             return {
                 gameState: { cells },
                 moved: path ?
@@ -70,7 +70,7 @@ export function move(oldState: GameState, dir: MoveDirections): MoveResult {
         return moveResult;
 }
 
-function moveCellStep(cells: Cell[][], cell: LocatedNumber, moveVector: Vector, path?: MovePath)
+function moveCellStep(cells: Cell[][], cell: LocatedNumber, moveVector: Vector, doNotMerge: List<LocatedNumber>, path?: MovePath)
     : { cells: Cell[][], path?: MovePath, generated?: LocatedNumber } {
     const currentPath = path == null ? {
         from: cell,
@@ -90,9 +90,9 @@ function moveCellStep(cells: Cell[][], cell: LocatedNumber, moveVector: Vector, 
 
     const hittedCell = cells[currentPath.to.x][currentPath.to.y];
     if (hittedCell == null)
-        return moveCellStep(cells, cell, moveVector, currentPath)
+        return moveCellStep(cells, cell, moveVector, doNotMerge, currentPath)
     else {
-        if (hittedCell != cell.cell)
+        if (hittedCell != cell.cell || doNotMerge.some(x => Vector.equal(x!, currentPath.to)))
             return {
                 cells: path == null ? cells : mapPath(cells, path),
                 path
