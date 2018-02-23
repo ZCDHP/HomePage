@@ -24,8 +24,8 @@ export interface MovePath {
 }
 
 type Located<T> = Vector & T;
-type LocatedCell = Located<{ cell: Cell }>
-type LocatedNumber = Located<{ cell: number }>
+export type LocatedCell = Located<{ cell: Cell }>
+export type LocatedNumber = Located<{ cell: number }>
 
 export interface MoveResult {
     gameState: GameState
