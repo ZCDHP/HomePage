@@ -37,7 +37,7 @@ export class Game extends React.Component<{ id: string }, { score: number, score
                     }`}
                 </style>
                 <div className="row">
-                    <div className="container-fluid d-flex flex-row-reverse col-xs-12 col-sm-8 offset-sm-2 col-md-6 offset-md-3">
+                    <div className="container-fluid d-flex align-items-end flex-row-reverse col-xs-12 col-sm-8 offset-sm-2 col-md-6 offset-md-3">
                         <div className="px-3"
                             style={{ backgroundColor: "rgb(187, 173, 160)", borderRadius: "3px", fontWeight: 700, fontFamily: '"Clear Sans", "Helvetica Neue", Arial, sans-serif' }}>
                             {this.state.scoreAddition &&
@@ -48,6 +48,16 @@ export class Game extends React.Component<{ id: string }, { score: number, score
                             <p className="my-0" style={{ fontSize: "1.5em", color: "rgb(255, 255, 255)" }}>
                                 {this.state.score}
                             </p>
+                        </div>
+                        <div className="px-3" >
+                            <button type="button" className="btn btn-light"
+                                style={{ backgroundColor: "rgb(143, 122, 102)", color: "rgb(249, 246, 242)", borderRadius: "3px", fontWeight: 700, fontFamily: '"Clear Sans", "Helvetica Neue", Arial, sans-serif' }}
+                                onClick={() => {
+                                    this.setState({ score: 0 });
+                                    this.viewState = CreateViewState(gameStart());
+                                }} >
+                                New Game
+                            </button>
                         </div>
                     </div>
                 </div>
