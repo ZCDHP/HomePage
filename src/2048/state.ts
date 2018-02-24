@@ -15,6 +15,7 @@ const EmptyBoard: Cell[][] = [
 
 export interface GameState {
     cells: Cell[][]
+    score: number
 };
 
 export interface MovePath {
@@ -39,7 +40,7 @@ export function gameStart(): GameState {
     const cells1 = set(EmptyBoard, cell1 as LocatedNumber);
     const cell2 = tryGenerateNewCell(cells1);
     const cells2 = set(cells1, cell2 as LocatedNumber);
-    return { cells: cells2 };
+    return { cells: cells2, score: 0 };
 }
 
 export function move(oldState: GameState, dir: MoveDirections): MoveResult {
@@ -49,7 +50,10 @@ export function move(oldState: GameState, dir: MoveDirections): MoveResult {
         .reduce<MoveResult>((result, cell) => {
             const { cells, path, merged } = moveCellStep(result!.gameState.cells, cell!, vector, result!.generated);
             return {
-                gameState: { cells },
+                gameState: {
+                    cells,
+                    score: merged ? result!.gameState.score + merged.cell : result!.gameState.score
+                },
                 moved: path ?
                     result!.moved.push(path) : result!.moved,
                 merged: merged ?
@@ -63,7 +67,10 @@ export function move(oldState: GameState, dir: MoveDirections): MoveResult {
         if (newCell == false)
             throw new Error("Never");
         return {
-            gameState: { cells: set(moveResult.gameState.cells, newCell) },
+            gameState: {
+                cells: set(moveResult.gameState.cells, newCell),
+                score: moveResult.gameState.score
+            },
             moved: moveResult.moved,
             merged: moveResult.merged,
             generated: moveResult.generated.push(newCell)

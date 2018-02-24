@@ -4,11 +4,21 @@ import { ViewState, render, init as CreateViewState } from './viewState'
 import { scaleCanvas } from "../util";
 import Vector from "../flappy/linear/vector";
 
-export class Game extends React.Component<{ id: string }>{
+export class Game extends React.Component<{ id: string }, { score: number }>{
     render() {
         return (
             <div className="container-fluid text-center my-5">
                 <div className="row">
+                    <div className="container-fluid d-flex flex-row-reverse col-xs-12 col-sm-8 offset-sm-2 col-md-6 offset-md-3">
+                        <div className="px-3" style={{ backgroundColor: "rgb(187, 173, 160)", borderRadius: "3px", fontWeight: 700, fontFamily: '"Clear Sans", "Helvetica Neue", Arial, sans-serif' }}>
+                            <p className="mt-1 mb-0" style={{ fontSize: "0.9em", color: "rgb(238, 228, 218)" }}>SCORE</p>
+                            <p className="my-0" style={{ fontSize: "1.5em", color: "rgb(255, 255, 255)" }}>
+                                {this.state.score}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div className="row my-3">
                     <canvas
                         id={this.props.id}
                         className="col-xs-12 col-sm-8 offset-sm-2 col-md-6 offset-md-3"
@@ -39,6 +49,7 @@ export class Game extends React.Component<{ id: string }>{
                                 generatings: generated.toArray(),
                                 startTime: window.performance.now()
                             };
+                            this.setState({ score: gameState.score });
                             this.drag = null;
                         }}
                     />
@@ -64,6 +75,7 @@ export class Game extends React.Component<{ id: string }>{
 
     drag: Vector | null = null;
 
+    state = { score: 0 }
     viewState = CreateViewState(gameStart());
 }
 
