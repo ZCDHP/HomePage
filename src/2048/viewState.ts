@@ -33,7 +33,7 @@ export function render(context: CanvasRenderingContext2D, state: ViewState) {
 
     context.clearRect(0, 0, 900, 900);
     context.fillStyle = "rgb(187, 173, 160)";
-    context.fillRect(0, 0, 900, 900);
+    renderRoundRect(context, new Vector(900, 900), 11);
 
     const notInAnime = map(state.gameState.cells, lc => {
         if (
@@ -97,24 +97,23 @@ function renderCell(context: CanvasRenderingContext2D, cell: Cell, pos: Vector, 
     const cellWidth = CellWidth * scale;
     context.save();
     context.translate(pos.x, pos.y);
+    context.fillStyle = cellBackgroundColor(cell);
 
-    renderCellBackground(context, cell, cellWidth, cellWidth / 32);
-
+    renderRoundRect(context, new Vector(cellWidth, cellWidth), cellWidth / 32);
     renderCellNumber(context, cell, pos, cellWidth, scale);
 
     context.restore();
 }
 
-function renderCellBackground(context: CanvasRenderingContext2D, cell: Cell, cellWidth: number, radius: number) {
-    context.fillStyle = cellBackgroundColor(cell);
+function renderRoundRect(context: CanvasRenderingContext2D, size: Vector, radius: number) {
     context.beginPath();
     context.moveTo(radius, 0);
-    context.lineTo(cellWidth - radius, 0);
-    context.quadraticCurveTo(cellWidth, 0, cellWidth, radius);
-    context.lineTo(cellWidth, cellWidth - radius);
-    context.quadraticCurveTo(cellWidth, cellWidth, cellWidth - radius, cellWidth);
-    context.lineTo(radius, cellWidth);
-    context.quadraticCurveTo(0, cellWidth, 0, cellWidth - radius);
+    context.lineTo(size.x - radius, 0);
+    context.quadraticCurveTo(size.x, 0, size.x, radius);
+    context.lineTo(size.x, size.y - radius);
+    context.quadraticCurveTo(size.x, size.y, size.x - radius, size.y);
+    context.lineTo(radius, size.y);
+    context.quadraticCurveTo(0, size.y, 0, size.y - radius);
     context.lineTo(0, radius);
     context.quadraticCurveTo(0, 0, radius, 0);
     context.closePath();
