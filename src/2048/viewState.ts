@@ -1,11 +1,14 @@
 import { forEach, map, GameState, Cell, MovePath, LocatedNumber, MoveDirections, move } from "./state";
 import Vector from "../flappy/linear/vector";
+import { Bazier } from "../util";
 
 const Gap = 20;
 const CellWidth = (900 - Gap * 5) / 4;
 const moveDur = 100;
 const mergeDur = moveDur * 2;
 const generateDur = mergeDur;
+const mergeStart = moveDur;
+const generateStart = mergeStart;
 
 export interface ViewState {
     gameState: GameState
@@ -45,26 +48,45 @@ export function render(context: CanvasRenderingContext2D, state: ViewState) {
     forEach(notInAnime, lc => renderCell(context, lc.cell, grid2Pos(lc)));
 
     const tMoving = passed > moveDur ? 1 : (passed / moveDur);
+    const pMoving = Bazier.ease_in_out(tMoving);
     state.movings.forEach(moving => {
         const from = grid2Pos(moving.from);
         const to = grid2Pos(moving.to);
-        const pos = Vector.add(Vector.scale(Vector.subtracion(to, from), tMoving), from);
+        const pos = Vector.add(Vector.scale(Vector.subtracion(to, from), pMoving), from);
         renderCell(context, moving.number, pos);
     });
 
-    const tGenerating = passed > generateDur ? 1 : (passed / generateDur);
-    state.generatings.forEach(generating => {
-        const offset = (1 - tGenerating) * CellWidth / 2;
-        const pos = Vector.add(grid2Pos(generating), new Vector(offset, offset));
-        renderCell(context, generating.cell, pos, tGenerating);
-    });
+    if (passed > generateStart) {
+        const generatePassed = passed - generateStart;
+        const tGenerating = generatePassed > generateDur ? 1 : (generatePassed / generateDur);
+        const pGenerating = Bazier.ease_in_out(tGenerating);
+        state.generatings.forEach(generating => {
+            const offset = (1 - tGenerating) * CellWidth / 2;
+            const pos = Vector.add(grid2Pos(generating), new Vector(offset, offset));
+            renderCell(context, generating.cell, pos, pGenerating);
+        });
+    }
 
-    const tMerging = passed > mergeDur ? 1 : (passed / mergeDur);
-    state.mergings.forEach(merging => {
-        const offset = (1 - tGenerating) * CellWidth / 2;
-        const pos = Vector.add(grid2Pos(merging), new Vector(offset, offset));
-        renderCell(context, merging.cell, pos, tGenerating);
-    })
+    if (passed > mergeStart) {
+        const mergePassed = passed - mergeStart;
+        const tMerging = mergePassed > mergeDur ? 1 : (mergePassed / mergeDur);
+        const scale = percentage2MergingScale(Bazier.ease(tMerging));
+        state.mergings.forEach(merging => {
+            const offset = (1 - scale) * CellWidth / 2;
+            const pos = Vector.add(grid2Pos(merging), new Vector(offset, offset));
+            renderCell(context, merging.cell, pos, scale);
+        })
+    }
+}
+
+function percentage2MergingScale(p: number) {
+    if (p >= 1)
+        return 1;
+
+    if (p <= 0.5)
+        return p * 2 * 1.2;
+    else
+        return 1.2 - 0.2 * (p - 0.5) * 2;
 }
 
 function grid2Pos(gird: Vector) {
@@ -76,7 +98,7 @@ function renderCell(context: CanvasRenderingContext2D, cell: Cell, pos: Vector, 
     context.save();
     context.translate(pos.x, pos.y);
 
-    renderCellBackground(context, cell, cellWidth, cellWidth / 35);
+    renderCellBackground(context, cell, cellWidth, cellWidth / 32);
 
     renderCellNumber(context, cell, pos, cellWidth, scale);
 
