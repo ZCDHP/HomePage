@@ -1,41 +1,76 @@
-import { List } from 'immutable';
-import { forEach, GameState, Cell, MovePath, LocatedNumber, MoveDirections } from "./state";
+import { forEach, map, GameState, Cell, MovePath, LocatedNumber, MoveDirections, move } from "./state";
 import Vector from "../flappy/linear/vector";
 
 const Gap = 20;
 const CellWidth = (900 - Gap * 5) / 4;
-
-type Moving = MovePath & { startTime: number };
-type Generating = LocatedNumber & { startTime: number };
+const animeDur = 100;
 
 export interface ViewState {
     gameState: GameState
-    movings: List<Moving>
-    generatings: List<Generating>
+    movings: MovePath[]
+    generatings: LocatedNumber[]
+    startTime: number
 }
 
 export function init(gameState: GameState): ViewState {
     return {
         gameState,
-        movings: List(),
-        generatings: List()
+        movings: [],
+        generatings: [],
+        startTime: window.performance.now()
     };
 }
 
 export function render(context: CanvasRenderingContext2D, state: ViewState) {
+    const passed = window.performance.now() - state.startTime;
+    const t = passed / animeDur;
+
     context.clearRect(0, 0, 900, 900);
     context.fillStyle = "rgb(187, 173, 160)";
     context.fillRect(0, 0, 900, 900);
-    forEach(state.gameState.cells, (x, y, cell) => renderCell(context, x, y, cell));
+
+    const notInAnime = map(state.gameState.cells, lc => {
+        if (t < 1 &&
+            (state.movings.some(moving => Vector.equal(moving.to, lc)) || state.generatings.some(generating => Vector.equal(generating, lc))))
+            return null;
+        else
+            return lc.cell;
+    });
+
+    forEach(notInAnime, lc => renderCell(context, lc.cell, grid2Pos(lc)));
+
+    if (t < 1) {
+        state.movings.forEach(moving => {
+            const from = grid2Pos(moving.from);
+            const to = grid2Pos(moving.to);
+            const pos = Vector.add(Vector.scale(Vector.subtracion(to, from), t), from);
+            renderCell(context, moving.number, pos);
+        });
+        state.generatings.forEach(generating => {
+            const offset = (1 - t) * CellWidth / 2;
+            const pos = Vector.add(grid2Pos(generating), new Vector(offset, offset));
+            renderCell(context, generating.cell, pos, t * CellWidth);
+        });
+    }
 }
 
-function renderCell(context: CanvasRenderingContext2D, x: number, y: number, cell: Cell) {
-    const left = x * (Gap + CellWidth) + Gap;
-    const top = y * (Gap + CellWidth) + Gap;
+function grid2Pos(gird: Vector) {
+    return Vector.add(Vector.scale(gird, Gap + CellWidth), new Vector(Gap, Gap));
+}
+
+function renderCell(context: CanvasRenderingContext2D, cell: Cell, pos: Vector, cellWidth: number = CellWidth) {
+    context.save();
+    context.translate(pos.x, pos.y);
 
     context.fillStyle = cellBackgroundColor(cell);
-    context.fillRect(left, top, CellWidth, CellWidth);
+    context.fillRect(0, 0, cellWidth, cellWidth);
 
+    renderCellNumber(context, cell, pos, cellWidth);
+
+    context.restore();
+}
+
+function renderCellNumber(context: CanvasRenderingContext2D, cell: Cell, pos: Vector, cellWidth: number) {
     if (cell == null)
         return;
     if (cell <= 4)
@@ -47,8 +82,8 @@ function renderCell(context: CanvasRenderingContext2D, x: number, y: number, cel
     context.textBaseline = "middle";
     context.fillText(
         cell.toString(),
-        left + CellWidth / 2,
-        top + CellWidth / 2);
+        cellWidth / 2,
+        cellWidth / 2);
 }
 
 function cellBackgroundColor(cell: Cell): string {

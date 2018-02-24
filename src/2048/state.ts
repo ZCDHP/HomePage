@@ -142,7 +142,7 @@ function randomPick<T>(arr: T[]): T {
     return arr[Math.floor(Math.random() * arr.length)];
 }
 
-function map(cells: Cell[][], mapper: (lc: LocatedCell) => Cell) {
+export function map(cells: Cell[][], mapper: (lc: LocatedCell) => Cell) {
     return cells.map((row, x) => row.map((cell, y) => mapper({ x, y, cell })));
 }
 
@@ -150,8 +150,8 @@ export function reduce<T>(cells: Cell[][], init: T, reducer: (lc: LocatedCell, v
     return cells.reduce((rowv, row, x) => row.reduce((cellv, cell, y) => reducer({ x, y, cell }, cellv), rowv), init)
 }
 
-export function forEach(cells: Cell[][], func: (x: number, y: number, cell: Cell) => void) {
-    return cells.forEach((row, x) => row.forEach((cell, y) => func(x, y, cell)))
+export function forEach(cells: Cell[][], func: (lc: LocatedCell) => void) {
+    return cells.forEach((row, x) => row.forEach((cell, y) => func({ x, y, cell })))
 }
 
 function set(cells: Cell[][], toSet: LocatedCell) {

@@ -34,8 +34,9 @@ export class Game extends React.Component<{ id: string }>{
                             const { gameState, moved, generated } = move(this.viewState.gameState, drageOffset2Direction(offset));
                             this.viewState = {
                                 gameState,
-                                movings: this.viewState.movings.push(...moved.toArray().map(x => Object.assign({}, x, { startTime: currentTime }))),
-                                generatings: this.viewState.generatings.push(...generated.toArray().map(x => Object.assign({}, x, { startTime: currentTime })))
+                                movings: moved.toArray(),
+                                generatings: generated.toArray(),
+                                startTime: window.performance.now()
                             };
                             this.drag = null;
                         }}
