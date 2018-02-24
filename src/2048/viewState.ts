@@ -49,7 +49,7 @@ export function render(context: CanvasRenderingContext2D, state: ViewState) {
         state.generatings.forEach(generating => {
             const offset = (1 - t) * CellWidth / 2;
             const pos = Vector.add(grid2Pos(generating), new Vector(offset, offset));
-            renderCell(context, generating.cell, pos, t * CellWidth);
+            renderCell(context, generating.cell, pos, t);
         });
     }
 }
@@ -58,26 +58,42 @@ function grid2Pos(gird: Vector) {
     return Vector.add(Vector.scale(gird, Gap + CellWidth), new Vector(Gap, Gap));
 }
 
-function renderCell(context: CanvasRenderingContext2D, cell: Cell, pos: Vector, cellWidth: number = CellWidth) {
+function renderCell(context: CanvasRenderingContext2D, cell: Cell, pos: Vector, scale: number = 1) {
+    const cellWidth = CellWidth * scale;
     context.save();
     context.translate(pos.x, pos.y);
 
-    context.fillStyle = cellBackgroundColor(cell);
-    context.fillRect(0, 0, cellWidth, cellWidth);
+    renderCellBackground(context, cell, cellWidth, cellWidth / 35);
 
-    renderCellNumber(context, cell, pos, cellWidth);
+    renderCellNumber(context, cell, pos, cellWidth, scale);
 
     context.restore();
 }
 
-function renderCellNumber(context: CanvasRenderingContext2D, cell: Cell, pos: Vector, cellWidth: number) {
+function renderCellBackground(context: CanvasRenderingContext2D, cell: Cell, cellWidth: number, radius: number) {
+    context.fillStyle = cellBackgroundColor(cell);
+    context.beginPath();
+    context.moveTo(radius, 0);
+    context.lineTo(cellWidth - radius, 0);
+    context.quadraticCurveTo(cellWidth, 0, cellWidth, radius);
+    context.lineTo(cellWidth, cellWidth - radius);
+    context.quadraticCurveTo(cellWidth, cellWidth, cellWidth - radius, cellWidth);
+    context.lineTo(radius, cellWidth);
+    context.quadraticCurveTo(0, cellWidth, 0, cellWidth - radius);
+    context.lineTo(0, radius);
+    context.quadraticCurveTo(0, 0, radius, 0);
+    context.closePath();
+    context.fill();
+}
+
+function renderCellNumber(context: CanvasRenderingContext2D, cell: Cell, pos: Vector, cellWidth: number, scale: number) {
     if (cell == null)
         return;
     if (cell <= 4)
         context.fillStyle = "rgb(119, 110, 101)";
     else
         context.fillStyle = "rgb(249, 246, 242)";
-    context.font = '40pt Calibri';
+    context.font = `${700 * scale} ${scale * 90}px sans-serif`;
     context.textAlign = "center"
     context.textBaseline = "middle";
     context.fillText(
