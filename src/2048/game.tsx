@@ -31,10 +31,11 @@ export class Game extends React.Component<{ id: string }>{
                             if (Math.max(Math.abs(offset.x), Math.abs(offset.y)) < 50)
                                 return;
                             const currentTime = window.performance.now();
-                            const { gameState, moved, generated } = move(this.viewState.gameState, drageOffset2Direction(offset));
+                            const { gameState, moved, merged, generated } = move(this.viewState.gameState, drageOffset2Direction(offset));
                             this.viewState = {
                                 gameState,
                                 movings: moved.toArray(),
+                                mergings: merged.toArray(),
                                 generatings: generated.toArray(),
                                 startTime: window.performance.now()
                             };

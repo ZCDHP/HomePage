@@ -3,11 +3,14 @@ import Vector from "../flappy/linear/vector";
 
 const Gap = 20;
 const CellWidth = (900 - Gap * 5) / 4;
-const animeDur = 100;
+const moveDur = 100;
+const mergeDur = moveDur * 2;
+const generateDur = mergeDur;
 
 export interface ViewState {
     gameState: GameState
     movings: MovePath[]
+    mergings: LocatedNumber[]
     generatings: LocatedNumber[]
     startTime: number
 }
@@ -16,6 +19,7 @@ export function init(gameState: GameState): ViewState {
     return {
         gameState,
         movings: [],
+        mergings: [],
         generatings: [],
         startTime: window.performance.now()
     };
@@ -23,15 +27,16 @@ export function init(gameState: GameState): ViewState {
 
 export function render(context: CanvasRenderingContext2D, state: ViewState) {
     const passed = window.performance.now() - state.startTime;
-    const t = passed / animeDur;
 
     context.clearRect(0, 0, 900, 900);
     context.fillStyle = "rgb(187, 173, 160)";
     context.fillRect(0, 0, 900, 900);
 
     const notInAnime = map(state.gameState.cells, lc => {
-        if (t < 1 &&
-            (state.movings.some(moving => Vector.equal(moving.to, lc)) || state.generatings.some(generating => Vector.equal(generating, lc))))
+        if (
+            state.movings.some(moving => Vector.equal(moving.to, lc)) ||
+            state.generatings.some(generating => Vector.equal(generating, lc)) ||
+            state.mergings.some(merging => Vector.equal(merging, lc)))
             return null;
         else
             return lc.cell;
@@ -39,19 +44,27 @@ export function render(context: CanvasRenderingContext2D, state: ViewState) {
 
     forEach(notInAnime, lc => renderCell(context, lc.cell, grid2Pos(lc)));
 
-    if (t < 1) {
-        state.movings.forEach(moving => {
-            const from = grid2Pos(moving.from);
-            const to = grid2Pos(moving.to);
-            const pos = Vector.add(Vector.scale(Vector.subtracion(to, from), t), from);
-            renderCell(context, moving.number, pos);
-        });
-        state.generatings.forEach(generating => {
-            const offset = (1 - t) * CellWidth / 2;
-            const pos = Vector.add(grid2Pos(generating), new Vector(offset, offset));
-            renderCell(context, generating.cell, pos, t);
-        });
-    }
+    const tMoving = passed > moveDur ? 1 : (passed / moveDur);
+    state.movings.forEach(moving => {
+        const from = grid2Pos(moving.from);
+        const to = grid2Pos(moving.to);
+        const pos = Vector.add(Vector.scale(Vector.subtracion(to, from), tMoving), from);
+        renderCell(context, moving.number, pos);
+    });
+
+    const tGenerating = passed > generateDur ? 1 : (passed / generateDur);
+    state.generatings.forEach(generating => {
+        const offset = (1 - tGenerating) * CellWidth / 2;
+        const pos = Vector.add(grid2Pos(generating), new Vector(offset, offset));
+        renderCell(context, generating.cell, pos, tGenerating);
+    });
+
+    const tMerging = passed > mergeDur ? 1 : (passed / mergeDur);
+    state.mergings.forEach(merging => {
+        const offset = (1 - tGenerating) * CellWidth / 2;
+        const pos = Vector.add(grid2Pos(merging), new Vector(offset, offset));
+        renderCell(context, merging.cell, pos, tGenerating);
+    })
 }
 
 function grid2Pos(gird: Vector) {

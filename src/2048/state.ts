@@ -30,6 +30,7 @@ export type LocatedNumber = Located<{ cell: number }>
 export interface MoveResult {
     gameState: GameState
     moved: List<MovePath>
+    merged: List<LocatedNumber>
     generated: List<LocatedNumber>
 }
 
@@ -46,15 +47,16 @@ export function move(oldState: GameState, dir: MoveDirections): MoveResult {
     const moveResult = locatedNumbers(oldState.cells)
         .sort((a, b) => b.x * vector.x + b.y * vector.y - (a.x * vector.x + a.y * vector.y))
         .reduce<MoveResult>((result, cell) => {
-            const { cells, path, generated } = moveCellStep(result!.gameState.cells, cell!, vector, result!.generated);
+            const { cells, path, merged } = moveCellStep(result!.gameState.cells, cell!, vector, result!.generated);
             return {
                 gameState: { cells },
                 moved: path ?
                     result!.moved.push(path) : result!.moved,
-                generated: generated ?
-                    result!.generated.push(generated) : result!.generated
+                merged: merged ?
+                    result!.merged.push(merged) : result!.merged,
+                generated: result!.generated
             };
-        }, { gameState: oldState, moved: List(), generated: List() });
+        }, { gameState: oldState, moved: List(), merged: List(), generated: List() });
 
     if (moveResult.moved.count() > 0) {
         const newCell = tryGenerateNewCell(moveResult.gameState.cells);
@@ -63,6 +65,7 @@ export function move(oldState: GameState, dir: MoveDirections): MoveResult {
         return {
             gameState: { cells: set(moveResult.gameState.cells, newCell) },
             moved: moveResult.moved,
+            merged: moveResult.merged,
             generated: moveResult.generated.push(newCell)
         };
     }
@@ -71,7 +74,7 @@ export function move(oldState: GameState, dir: MoveDirections): MoveResult {
 }
 
 function moveCellStep(cells: Cell[][], cell: LocatedNumber, moveVector: Vector, doNotMerge: List<LocatedNumber>, path?: MovePath)
-    : { cells: Cell[][], path?: MovePath, generated?: LocatedNumber } {
+    : { cells: Cell[][], path?: MovePath, merged?: LocatedNumber } {
     const currentPath = path == null ? {
         from: cell,
         to: Vector.add(cell, moveVector),
@@ -105,7 +108,7 @@ function moveCellStep(cells: Cell[][], cell: LocatedNumber, moveVector: Vector, 
                     cell: cell.cell * 2
                 }),
                 path: currentPath,
-                generated: { x: currentPath.to.x, y: currentPath.to.y, cell: cell.cell * 2 }
+                merged: { x: currentPath.to.x, y: currentPath.to.y, cell: cell.cell * 2 }
             };
     }
 }
