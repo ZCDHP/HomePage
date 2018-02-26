@@ -2,6 +2,9 @@ import { strEnum, assertUnreachable } from "../util"
 import Vector from "../flappy/linear/vector";
 import { List } from "immutable"
 
+export const GameStateTypes = strEnum(["Gaming", "GameOver"]);
+type GameStateTypes = keyof typeof GameStateTypes;
+
 export const MoveDirections = strEnum(["Up", "Down", "Left", "Right"]);
 type MoveDirections = keyof typeof MoveDirections;
 
@@ -16,7 +19,9 @@ const EmptyBoard: Cell[][] = [
 export interface GameState {
     cells: Cell[][]
     score: number
+    type: GameStateTypes
 };
+
 
 export interface MovePath {
     number: number
@@ -40,7 +45,7 @@ export function gameStart(): GameState {
     const cells1 = set(EmptyBoard, cell1 as LocatedNumber);
     const cell2 = tryGenerateNewCell(cells1);
     const cells2 = set(cells1, cell2 as LocatedNumber);
-    return { cells: cells2, score: 0 };
+    return { cells: cells2, score: 0, type: GameStateTypes.Gaming };
 }
 
 export function move(oldState: GameState, dir: MoveDirections): MoveResult {
@@ -52,7 +57,8 @@ export function move(oldState: GameState, dir: MoveDirections): MoveResult {
             return {
                 gameState: {
                     cells,
-                    score: merged ? result!.gameState.score + merged.cell : result!.gameState.score
+                    score: merged ? result!.gameState.score + merged.cell : result!.gameState.score,
+                    type: result!.gameState.type
                 },
                 moved: path ?
                     result!.moved.push(path) : result!.moved,
@@ -66,10 +72,15 @@ export function move(oldState: GameState, dir: MoveDirections): MoveResult {
         const newCell = tryGenerateNewCell(moveResult.gameState.cells);
         if (newCell == false)
             throw new Error("Never");
+        const newCells = set(moveResult.gameState.cells, newCell);
         return {
             gameState: {
-                cells: set(moveResult.gameState.cells, newCell),
-                score: moveResult.gameState.score
+                cells: newCells,
+                score: moveResult.gameState.score,
+                type: ([MoveDirections.Up, MoveDirections.Down, MoveDirections.Left, MoveDirections.Right] as MoveDirections[])
+                    .some(dir => move({ cells: newCells, score: 0, type: GameStateTypes.Gaming }, dir).moved.count() > 0) ?
+                    GameStateTypes.Gaming :
+                    GameStateTypes.GameOver
             },
             moved: moveResult.moved,
             merged: moveResult.merged,

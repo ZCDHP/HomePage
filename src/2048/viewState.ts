@@ -1,4 +1,4 @@
-import { forEach, map, GameState, Cell, MovePath, LocatedNumber, MoveDirections, move } from "./state";
+import { forEach, map, GameState, GameStateTypes, Cell, MovePath, LocatedNumber, MoveDirections, move } from "./state";
 import Vector from "../flappy/linear/vector";
 import { Bazier } from "../util";
 
@@ -77,6 +77,9 @@ export function render(context: CanvasRenderingContext2D, state: ViewState) {
             renderCell(context, merging.cell, pos, scale);
         })
     }
+
+    if (passed > mergeStart + mergeDur && state.gameState.type == GameStateTypes.GameOver)
+        reunderGameOver(context);
 }
 
 function percentage2MergingScale(p: number) {
@@ -134,6 +137,16 @@ function renderCellNumber(context: CanvasRenderingContext2D, cell: Cell, pos: Ve
         cell.toString(),
         cellWidth / 2,
         cellWidth / 2);
+}
+
+function reunderGameOver(context: CanvasRenderingContext2D) {
+    context.fillStyle = "rgba(238, 228, 218, 0.73)";
+    context.fillRect(0, 0, 900, 900);
+
+    context.fillStyle = "rgb(119, 110, 101)";
+    context.font = "700 120px sans-serif";
+    context.textAlign = "center"
+    context.fillText("Game Over", 450, 450);
 }
 
 function cellBackgroundColor(cell: Cell): string {
