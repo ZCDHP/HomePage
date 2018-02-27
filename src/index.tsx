@@ -83,7 +83,7 @@ document.addEventListener('DOMContentLoaded', () => {
             {
                 name: "2048",
                 description: "A simple and crude imitation to 2048.",
-                coverPath: "",
+                coverPath: "./2048/cover.png",
                 constructor: id => <_2048 id={id} />,
                 publishDate: new Date('2030-01-01')
             },

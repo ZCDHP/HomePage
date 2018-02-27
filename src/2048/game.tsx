@@ -122,8 +122,9 @@ export class Game extends React.Component<{ id: string }, { score: number, score
     }
 
     drag: Vector | null = null;
-    //viewState = CreateViewState(gameStart());
+    viewState = CreateViewState(gameStart());
 
+    /*
     viewState = CreateViewState(
         {
             cells: [
@@ -135,7 +136,7 @@ export class Game extends React.Component<{ id: string }, { score: number, score
             score: 0,
             type: "Gaming"
         }
-    )
+    )*/
 }
 
 function drageOffset2Direction(offset: Vector) {

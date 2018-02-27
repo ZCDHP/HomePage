@@ -7,7 +7,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "build-dev": "./node_modules/.bin/webpack --config ./webpack.dev.js && npm run assets",
     "build-prod": "./node_modules/.bin/webpack --config ./webpack.prod.js && npm run assets",
-    "assets": "cp ./src/index.html ./dist/index.html && mkdir -p ./dist/flappy/ && cp -a ./src/flappy/asset/. ./dist/flappy/"
+    "assets": "cp ./src/index.html ./dist/index.html && mkdir -p ./dist/flappy/ && cp -a ./src/flappy/asset/. ./dist/flappy/ && mkdir -p ./dist/2048/ && cp -a ./src/2048/asset/. ./dist/2048/"
   },
   "author": "",
   "license": "ISC",
