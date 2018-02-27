@@ -2,150 +2,140 @@ import { strEnum, assertUnreachable } from "../util"
 import Vector from "../flappy/linear/vector";
 import { List } from "immutable"
 
-export const GameStateTypes = strEnum(["Gaming", "GameOver", "Win"]);
-type GameStateTypes = keyof typeof GameStateTypes;
+// Cell
+export const CellSourceType = strEnum(["Static", "Move", "Merge", "Generate"]);
+export type CellSourceType = keyof typeof CellSourceType;
+interface CellSource_Static {
+    type: typeof CellSourceType.Static
+}
+const CellSource_Static: CellSource_Static = { type: CellSourceType.Static };
+interface CellSource_Move {
+    type: typeof CellSourceType.Move
+    from: Vector
+}
+function CellSource_Move(from: Vector): CellSource_Move { return { type: CellSourceType.Move, from }; }
+interface CellSource_Merge {
+    type: typeof CellSourceType.Merge
+    from: Vector[]
+    mergeMoveNumber: number
+}
+function CellSource_Merge(from: Vector[], mergeMoveNumber: number): CellSource_Merge { return { type: CellSourceType.Merge, from, mergeMoveNumber }; }
+interface CellSource_Generate {
+    type: typeof CellSourceType.Generate
+}
+const CellSource_Generate: CellSource_Generate = { type: CellSourceType.Generate };
+export type CellSource =
+    | CellSource_Static
+    | CellSource_Move
+    | CellSource_Merge
+    | CellSource_Generate;
+export interface Cell {
+    value: number
+    source: CellSource
+}
 
-export const MoveDirections = strEnum(["Up", "Down", "Left", "Right"]);
-type MoveDirections = keyof typeof MoveDirections;
+function GeneratedCell(value: number): Cell { return { value, source: CellSource_Generate }; };
+function MovedCell(value: number, from: Vector): Cell { return { value, source: CellSource_Move(from) }; }
+function MergedCell(value: number, from: Vector[], mergeMoveNumber: number): Cell { return { value, source: CellSource_Merge(from, mergeMoveNumber) }; }
+function StaticCell(value: number): Cell { return { value, source: CellSource_Static }; }
 
-export type Cell = number | null;
-const EmptyBoard: Cell[][] = [
+export type Nullable<T> = T | null;
+export type Board = Nullable<Cell>[][];
+const EmptyBoard: Board = [
     [null, null, null, null],
     [null, null, null, null],
     [null, null, null, null],
     [null, null, null, null]
 ];
+export interface LocatedCell {
+    position: Vector
+    cell: Nullable<Cell>
+}
 
+// Game
+export const GameStateTypes = strEnum(["Gaming", "GameOver", "Win"]);
+export type GameStateTypes = keyof typeof GameStateTypes;
 export interface GameState {
-    cells: Cell[][]
-    score: number
     type: GameStateTypes
-};
-
-
-export interface MovePath {
-    number: number
-    from: Vector
-    to: Vector
+    board: Board
+    score: number
+    moveNumber: number
 }
 
-type Located<T> = Vector & T;
-export type LocatedCell = Located<{ cell: Cell }>
-export type LocatedNumber = Located<{ cell: number }>
-
-export interface MoveResult {
-    gameState: GameState
-    moved: List<MovePath>
-    merged: List<LocatedNumber>
-    generated: List<LocatedNumber>
-}
+const NewValue = () => Math.random() < 0.9 ? 2 : 4;
 
 export function gameStart(): GameState {
-    const cell1 = tryGenerateNewCell(EmptyBoard);
-    const cells1 = set(EmptyBoard, cell1 as LocatedNumber);
-    const cell2 = tryGenerateNewCell(cells1);
-    const cells2 = set(cells1, cell2 as LocatedNumber);
-    return { cells: cells2, score: 0, type: GameStateTypes.Gaming };
+    const empty1 = renderEmptyPosition(EmptyBoard);
+    const board1 = setGenerate(EmptyBoard, NewValue(), empty1);
+    const empty2 = renderEmptyPosition(board1);
+    const board2 = setGenerate(board1, NewValue(), empty2);
+    return { board: board2, score: 0, type: GameStateTypes.Gaming, moveNumber: 0 };
 }
 
-export function move(oldState: GameState, dir: MoveDirections): MoveResult {
+export const MoveDirections = strEnum(["Up", "Down", "Left", "Right"]);
+export type MoveDirections = keyof typeof MoveDirections;
+
+export function move(oldState: GameState, dir: MoveDirections): GameState {
+    if (oldState.type != GameStateTypes.Gaming)
+        return oldState;
+
+    const moveNumber = oldState.moveNumber + 1;
+    const movedBoard = moveBoard(oldState.board, moveNumber, dir);
+
+    if (!isVaildMovedBoard(movedBoard))
+        return oldState;
+
+    const newCellGeneratedBoard = setGenerate(movedBoard, NewValue(), renderEmptyPosition(movedBoard));
+    const gameOver = !([MoveDirections.Up, MoveDirections.Down, MoveDirections.Left, MoveDirections.Right] as MoveDirections[])
+        .some(_dir => isVaildMovedBoard(moveBoard(newCellGeneratedBoard, moveNumber + 1, _dir)));
+    const win = expand(newCellGeneratedBoard).some(x => x.cell != null && x.cell.value == 2048);
+
+    return {
+        type: gameOver ? GameStateTypes.GameOver :
+            win ? GameStateTypes.Win : GameStateTypes.Gaming,
+        board: newCellGeneratedBoard,
+        score: oldState.score + expand(newCellGeneratedBoard).filter(x => x.cell && x.cell.source.type == CellSourceType.Merge).reduce((_scoure, lc) => _scoure + lc.cell!.value, 0),
+        moveNumber
+    };
+}
+
+function moveBoard(board: Board, moveNumber: number, dir: MoveDirections): Board {
     const vector = moveVector(dir);
-    const moveResult = locatedNumbers(oldState.cells)
-        .sort((a, b) => b.x * vector.x + b.y * vector.y - (a.x * vector.x + a.y * vector.y))
-        .reduce<MoveResult>((result, cell) => {
-            const { cells, path, merged } = moveCellStep(result!.gameState.cells, cell!, vector, result!.generated);
-            return {
-                gameState: {
-                    cells,
-                    score: merged ? result!.gameState.score + merged.cell : result!.gameState.score,
-                    type: result!.gameState.type
-                },
-                moved: path ?
-                    result!.moved.push(path) : result!.moved,
-                merged: merged ?
-                    result!.merged.push(merged) : result!.merged,
-                generated: result!.generated
-            };
-        }, { gameState: oldState, moved: List(), merged: List(), generated: List() });
-
-    if (moveResult.merged.some(x => x!.cell == 2048)) {
-        return {
-            gameState: {
-                cells: moveResult.gameState.cells,
-                score: moveResult.gameState.score,
-                type: GameStateTypes.Win
-            },
-            moved: moveResult.moved,
-            merged: moveResult.merged,
-            generated: moveResult.generated
-        }
-    }
-
-
-    if (moveResult.moved.count() > 0) {
-        const newCell = tryGenerateNewCell(moveResult.gameState.cells);
-        if (newCell == false)
-            throw new Error("Never");
-        const newCells = set(moveResult.gameState.cells, newCell);
-        return {
-            gameState: {
-                cells: newCells,
-                score: moveResult.gameState.score,
-                type: ([MoveDirections.Up, MoveDirections.Down, MoveDirections.Left, MoveDirections.Right] as MoveDirections[])
-                    .some(dir => move({ cells: newCells, score: 0, type: GameStateTypes.Gaming }, dir).moved.count() > 0) ?
-                    GameStateTypes.Gaming :
-                    GameStateTypes.GameOver
-            },
-            moved: moveResult.moved,
-            merged: moveResult.merged,
-            generated: moveResult.generated.push(newCell)
-        };
-    }
-    else
-        return moveResult;
+    return expand(board)
+        .filter(x => x.cell)
+        .sort((a, b) => b.position.x * vector.x + b.position.y * vector.y - (a.position.x * vector.x + a.position.y * vector.y))
+        .reduce(
+            (_board, _locatedCell) => moveCell(_board, vector, moveNumber, _locatedCell.cell!.value, _locatedCell.position),
+            board);
 }
 
-function moveCellStep(cells: Cell[][], cell: LocatedNumber, moveVector: Vector, doNotMerge: List<LocatedNumber>, path?: MovePath)
-    : { cells: Cell[][], path?: MovePath, merged?: LocatedNumber } {
-    const currentPath = path == null ? {
-        from: cell,
-        to: Vector.add(cell, moveVector),
-        number: cell.cell
-    } : {
-            from: path.from,
-            to: Vector.add(path.to, moveVector),
-            number: cell.cell
-        };
+function moveCell(board: Board, moveVector: Vector, moveNumber: number, value: number, originPosition: Vector, currentPosition?: Vector): Board {
+    const nextPosition = Vector.add(moveVector, currentPosition ? currentPosition : originPosition);
+    const outOfBoard = isOutOfBoard(nextPosition);
+    const hittedCell = outOfBoard ? null : board[nextPosition.x][nextPosition.y];
+    const merge = hittedCell != null &&
+        hittedCell.value == value &&
+        (hittedCell.source.type != CellSourceType.Merge || hittedCell.source.mergeMoveNumber != moveNumber);
+    const stopMove = outOfBoard || (hittedCell && !merge);
+    if (stopMove)
+        return currentPosition && !Vector.equal(originPosition, currentPosition) ?
+            setMove(board, value, originPosition, currentPosition) :
+            setStatic(board, value, originPosition);
 
-    if (outOfBoard(currentPath.to))
-        return {
-            cells: path == null ? cells : mapPath(cells, path),
-            path
-        };
-
-    const hittedCell = cells[currentPath.to.x][currentPath.to.y];
-    if (hittedCell == null)
-        return moveCellStep(cells, cell, moveVector, doNotMerge, currentPath)
-    else {
-        if (hittedCell != cell.cell || doNotMerge.some(x => Vector.equal(x!, currentPath.to)))
-            return {
-                cells: path == null ? cells : mapPath(cells, path),
-                path
-            };
-        else
-            return {
-                cells: set(mapPath(cells, currentPath), {
-                    x: currentPath.to.x,
-                    y: currentPath.to.y,
-                    cell: cell.cell * 2
-                }),
-                path: currentPath,
-                merged: { x: currentPath.to.x, y: currentPath.to.y, cell: cell.cell * 2 }
-            };
+    if (merge) {
+        const from = [
+            hittedCell!.source.type == CellSourceType.Move ? (hittedCell!.source as CellSource_Move).from : nextPosition,
+            originPosition
+        ]
+        return setMerge(board, value * 2, from, moveNumber, nextPosition);
     }
+
+    return moveCell(board, moveVector, moveNumber, value, originPosition, nextPosition);
 }
 
-function outOfBoard(position: Vector) { return position.x < 0 || position.x > 3 || position.y < 0 || position.y > 3; }
+function isVaildMovedBoard(board: Board) { return expand(board).some(x => x.cell != null && (x.cell.source.type == CellSourceType.Move || x.cell.source.type == CellSourceType.Merge)); }
+
+function isOutOfBoard(position: Vector) { return position.x < 0 || position.x > 3 || position.y < 0 || position.y > 3; }
 
 function moveVector(dir: MoveDirections) {
     switch (dir) {
@@ -157,67 +147,47 @@ function moveVector(dir: MoveDirections) {
     assertUnreachable(dir);
 }
 
-function tryGenerateNewCell(cells: Cell[][]): (LocatedNumber | false) {
-    const empty = locatedCells(cells)
-        .filter(x => x!.cell == null)
+// Board Operations
+function renderEmptyPosition(board: Board): Vector {
+    const emptyPositions = expand(board).filter(x => x.cell == null).map(x => x.position);
+    return randomPick(emptyPositions);
+}
+
+function setGenerate(board: Board, value: number, position: Vector): Board {
+    return set(board, GeneratedCell(value), position)
+}
+function setMove(board: Board, value: number, from: Vector, to: Vector): Board {
+    return set(set(board, MovedCell(value, from), to), null, from);
+}
+function setMerge(board: Board, value: number, from: Vector[], mergeMoveNumber: number, position: Vector): Board {
+    const fromRemovde = from.reduce<Board>(
+        (_board, _from) => set(_board, null, _from)
+        , board);
+    return set(fromRemovde, MergedCell(value, from, mergeMoveNumber), position);
+}
+function setStatic(board: Board, value: number, position: Vector): Board {
+    return set(board, StaticCell(value), position);
+}
+function set(board: Board, cell: Nullable<Cell>, position: Vector): Board {
+    return map(board, old => Vector.equal(old.position, position) ? cell : old.cell);
+}
+
+export function expand(board: Board): (LocatedCell)[] {
+    return reduce<List<LocatedCell>>(
+        board,
+        List(),
+        (lc, list) => list.push(lc))
         .toArray();
-    if (empty.length == 0)
-        return false;
-    else {
-        const selected = randomPick(empty);
-        return {
-            x: selected.x,
-            y: selected.y,
-            cell: Math.random() < 0.9 ? 2 : 4
-        };
-    }
+}
+
+export function map(cells: Board, mapper: (lc: LocatedCell) => Nullable<Cell>): Board {
+    return cells.map((row, x) => row.map((cell, y) => mapper({ position: new Vector(x, y), cell })));
+}
+
+export function reduce<T>(board: Board, init: T, reducer: (lc: LocatedCell, value: T) => T) {
+    return board.reduce((rowv, row, x) => row.reduce((cellv, cell, y) => reducer({ position: new Vector(x, y), cell }, cellv), rowv), init)
 }
 
 function randomPick<T>(arr: T[]): T {
     return arr[Math.floor(Math.random() * arr.length)];
-}
-
-export function map(cells: Cell[][], mapper: (lc: LocatedCell) => Cell) {
-    return cells.map((row, x) => row.map((cell, y) => mapper({ x, y, cell })));
-}
-
-export function reduce<T>(cells: Cell[][], init: T, reducer: (lc: LocatedCell, value: T) => T) {
-    return cells.reduce((rowv, row, x) => row.reduce((cellv, cell, y) => reducer({ x, y, cell }, cellv), rowv), init)
-}
-
-export function forEach(cells: Cell[][], func: (lc: LocatedCell) => void) {
-    return cells.forEach((row, x) => row.forEach((cell, y) => func({ x, y, cell })))
-}
-
-function set(cells: Cell[][], toSet: LocatedCell) {
-    return map(cells, lc => Vector.equal(lc, toSet) ? toSet.cell : lc.cell);
-}
-
-function locatedCells(cells: Cell[][]): List<LocatedCell> {
-    return reduce<List<LocatedCell>>(
-        cells,
-        List(),
-        (lc, list) => list.push(lc));
-}
-
-function locatedNumbers(cells: Cell[][]): List<LocatedNumber> {
-    return reduce<List<LocatedNumber>>(
-        cells,
-        List(),
-        (lc, list) => lc.cell == null ? list : list.push({ x: lc.x, y: lc.y, cell: lc.cell }));
-}
-
-function mapPath(cells: Cell[][], path: MovePath) {
-    return set(
-        set(cells,
-            {
-                x: path.from.x,
-                y: path.from.y,
-                cell: null
-            },
-        ), {
-            x: path.to.x,
-            y: path.to.y,
-            cell: path.number
-        });
 }

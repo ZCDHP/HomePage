@@ -1,6 +1,6 @@
-import { forEach, map, GameState, GameStateTypes, Cell, MovePath, LocatedNumber, MoveDirections, move } from "./state";
+import { expand, move, GameState, GameStateTypes, CellSourceType, LocatedCell, MoveDirections, map } from "./state";
 import Vector from "../flappy/linear/vector";
-import { Bazier } from "../util";
+import { Bazier, assertUnreachable } from "../util";
 
 const Gap = 20;
 const CellWidth = (900 - Gap * 5) / 4;
@@ -9,21 +9,16 @@ const mergeDur = moveDur * 2;
 const generateDur = mergeDur;
 const mergeStart = moveDur;
 const generateStart = mergeStart;
+const endGameScreenStart = mergeStart + mergeDur;
 
 export interface ViewState {
     gameState: GameState
-    movings: MovePath[]
-    mergings: LocatedNumber[]
-    generatings: LocatedNumber[]
     startTime: number
 }
 
 export function init(gameState: GameState): ViewState {
     return {
         gameState,
-        movings: [],
-        mergings: [],
-        generatings: [],
         startTime: window.performance.now()
     };
 }
@@ -35,56 +30,75 @@ export function render(context: CanvasRenderingContext2D, state: ViewState) {
     context.fillStyle = "rgb(187, 173, 160)";
     renderRoundRect(context, new Vector(900, 900), 11);
 
-    const notInAnime = map(state.gameState.cells, lc => {
-        if (
-            state.movings.some(moving => Vector.equal(moving.to, lc)) ||
-            state.generatings.some(generating => Vector.equal(generating, lc)) ||
-            state.mergings.some(merging => Vector.equal(merging, lc)))
-            return null;
-        else
-            return lc.cell;
-    });
+    const pMoving = moveAnimatePercentage(passed);
+    const pGenerating = generateAnimatePercentage(passed);
+    const pMerge = mergeAnimatePercentage(passed);
+    const mergeScale = percentage2MergingScale(pMerge);
 
-    forEach(notInAnime, lc => renderCell(context, lc.cell, grid2Pos(lc)));
+    const renderMove = (value: number, from: Vector, to: Vector) => {
+        const fromPx = grid2Pos(from);
+        const toPx = grid2Pos(to);
+        const pos_m = Vector.add(Vector.scale(Vector.subtracion(toPx, fromPx), pMoving), fromPx);
+        renderCell(context, value, pos_m);
+    }
 
-    const tMoving = passed > moveDur ? 1 : (passed / moveDur);
-    const pMoving = Bazier.ease_in_out(tMoving);
-    state.movings.forEach(moving => {
-        const from = grid2Pos(moving.from);
-        const to = grid2Pos(moving.to);
-        const pos = Vector.add(Vector.scale(Vector.subtracion(to, from), pMoving), from);
-        renderCell(context, moving.number, pos);
-    });
-
-    if (passed > generateStart) {
-        const generatePassed = passed - generateStart;
-        const tGenerating = generatePassed > generateDur ? 1 : (generatePassed / generateDur);
-        const pGenerating = Bazier.ease_in_out(tGenerating);
-        state.generatings.forEach(generating => {
-            const offset = (1 - tGenerating) * CellWidth / 2;
-            const pos = Vector.add(grid2Pos(generating), new Vector(offset, offset));
-            renderCell(context, generating.cell, pos, pGenerating);
+    expand(state.gameState.board)
+        .sort((x, y) => renderPriority(x) - renderPriority(y))
+        .forEach(x => {
+            if (!x.cell) {
+                renderCell(context, null, grid2Pos(x.position));
+                return;
+            }
+            switch (x.cell.source.type) {
+                case CellSourceType.Static:
+                    renderCell(context, x.cell.value, grid2Pos(x.position));
+                    return;
+                case CellSourceType.Move:
+                    renderMove(x.cell.value, x.cell.source.from, x.position);
+                    return;
+                case CellSourceType.Generate:
+                    const offset_g = (1 - pGenerating) * CellWidth / 2;
+                    const pos_g = Vector.add(grid2Pos(x.position), new Vector(offset_g, offset_g));
+                    renderCell(context, x.cell.value, pos_g, pGenerating);
+                    return;
+                case CellSourceType.Merge:
+                    const moveValue = x.cell.value / 2;
+                    const offset_m = (1 - mergeScale) * CellWidth / 2;
+                    x.cell.source.from.forEach(_from => renderMove(moveValue, _from, x.position));
+                    const pos_m = Vector.add(grid2Pos(x.position), new Vector(offset_m, offset_m));
+                    renderCell(context, x.cell.value, pos_m, mergeScale);
+                    return;
+            }
+            assertUnreachable(x.cell.source);
         });
-    }
 
-    if (passed > mergeStart) {
-        const mergePassed = passed - mergeStart;
-        const tMerging = mergePassed > mergeDur ? 1 : (mergePassed / mergeDur);
-        const scale = percentage2MergingScale(Bazier.ease(tMerging));
-        state.mergings.forEach(merging => {
-            const offset = (1 - scale) * CellWidth / 2;
-            const pos = Vector.add(grid2Pos(merging), new Vector(offset, offset));
-            renderCell(context, merging.cell, pos, scale);
-        })
-    }
-
-    if (passed > mergeStart + mergeDur) {
+    if (passed > endGameScreenStart) {
         if (state.gameState.type == GameStateTypes.GameOver)
             renderGameOver(context);
         else if (state.gameState.type == GameStateTypes.Win)
             renderWin(context);
     }
+}
 
+function moveAnimatePercentage(passed: number) {
+    const tMoving = passed > moveDur ? 1 : (passed / moveDur);
+    return tMoving == 1 ? 1 : Bazier.ease_in_out(tMoving);
+}
+
+function generateAnimatePercentage(passed: number) {
+    if (passed <= generateStart)
+        return 0;
+    const generatePassed = passed - generateStart;
+    const tGenerating = generatePassed > generateDur ? 1 : (generatePassed / generateDur);
+    return tGenerating == 1 ? 1 : Bazier.ease_in_out(tGenerating);
+}
+
+function mergeAnimatePercentage(passed: number) {
+    if (passed <= mergeStart)
+        return 0;
+    const mergePassed = passed - mergeStart;
+    const tMerging = mergePassed > mergeDur ? 1 : (mergePassed / mergeDur);
+    return tMerging == 1 ? 1 : Bazier.ease(tMerging);
 }
 
 function percentage2MergingScale(p: number) {
@@ -101,14 +115,14 @@ function grid2Pos(gird: Vector) {
     return Vector.add(Vector.scale(gird, Gap + CellWidth), new Vector(Gap, Gap));
 }
 
-function renderCell(context: CanvasRenderingContext2D, cell: Cell, pos: Vector, scale: number = 1) {
+function renderCell(context: CanvasRenderingContext2D, value: number | null, pos: Vector, scale: number = 1) {
     const cellWidth = CellWidth * scale;
     context.save();
     context.translate(pos.x, pos.y);
-    context.fillStyle = cellBackgroundColor(cell);
+    context.fillStyle = cellBackgroundColor(value);
 
     renderRoundRect(context, new Vector(cellWidth, cellWidth), cellWidth / 32);
-    renderCellNumber(context, cell, pos, cellWidth, scale);
+    renderCellNumber(context, value, pos, cellWidth, scale);
 
     context.restore();
 }
@@ -128,10 +142,10 @@ function renderRoundRect(context: CanvasRenderingContext2D, size: Vector, radius
     context.fill();
 }
 
-function renderCellNumber(context: CanvasRenderingContext2D, cell: Cell, pos: Vector, cellWidth: number, scale: number) {
-    if (cell == null)
+function renderCellNumber(context: CanvasRenderingContext2D, value: number | null, pos: Vector, cellWidth: number, scale: number) {
+    if (value == null)
         return;
-    if (cell <= 4)
+    if (value <= 4)
         context.fillStyle = "rgb(119, 110, 101)";
     else
         context.fillStyle = "rgb(249, 246, 242)";
@@ -139,7 +153,7 @@ function renderCellNumber(context: CanvasRenderingContext2D, cell: Cell, pos: Ve
     context.textAlign = "center"
     context.textBaseline = "middle";
     context.fillText(
-        cell.toString(),
+        value.toString(),
         cellWidth / 2,
         cellWidth / 2);
 }
@@ -164,8 +178,8 @@ function renderWin(context: CanvasRenderingContext2D) {
     context.fillText("You Win", 450, 450);
 }
 
-function cellBackgroundColor(cell: Cell): string {
-    switch (cell) {
+function cellBackgroundColor(value: number | null): string {
+    switch (value) {
         case null: return "rgba(238, 228, 218, 0.35)";
         case 2: return "#eee4da";
         case 4: return "#ede0c8";
@@ -178,6 +192,18 @@ function cellBackgroundColor(cell: Cell): string {
         case 512: return "#edc850";
         case 1024: return "#edc53f";
         case 2048: return "#edc22e";
-        default: throw new Error(`Invalid cell :${cell}`);
+        default: throw new Error(`Invalid cell :${value}`);
     }
+}
+
+function renderPriority(locatedCell: LocatedCell) {
+    if (!locatedCell.cell)
+        return 0;
+    switch (locatedCell.cell.source.type) {
+        case CellSourceType.Static: return 1;
+        case CellSourceType.Move: return 2;
+        case CellSourceType.Generate: return 3;
+        case CellSourceType.Merge: return 4;
+    }
+    assertUnreachable(locatedCell.cell.source);
 }

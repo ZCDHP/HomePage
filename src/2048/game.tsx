@@ -1,5 +1,5 @@
 import * as React from "react";
-import { gameStart, forEach, GameState, Cell, move, MoveDirections } from "./state";
+import { gameStart, GameState, move, MoveDirections, Cell } from "./state";
 import { ViewState, render, init as CreateViewState } from './viewState'
 import { scaleCanvas } from "../util";
 import Vector from "../flappy/linear/vector";
@@ -84,18 +84,17 @@ export class Game extends React.Component<{ id: string }, { score: number, score
                             if (Math.max(Math.abs(offset.x), Math.abs(offset.y)) < 50)
                                 return;
                             const currentTime = window.performance.now();
-                            const { gameState, moved, merged, generated } = move(this.viewState.gameState, drageOffset2Direction(offset));
+                            const newState = move(this.viewState.gameState, drageOffset2Direction(offset));
+                            if (newState.moveNumber == this.viewState.gameState.moveNumber)
+                                return;
                             this.viewState = {
-                                gameState,
-                                movings: moved.toArray(),
-                                mergings: merged.toArray(),
-                                generatings: generated.toArray(),
+                                gameState: newState,
                                 startTime: window.performance.now()
                             };
                             this.setState(oldState => {
                                 return {
-                                    score: gameState.score,
-                                    scoreAddition: gameState.score == oldState.score ? undefined : gameState.score - oldState.score
+                                    score: newState.score,
+                                    scoreAddition: newState.score == oldState.score ? undefined : newState.score - oldState.score
                                 };
                             });
                             this.drag = null;
@@ -123,18 +122,18 @@ export class Game extends React.Component<{ id: string }, { score: number, score
 
     drag: Vector | null = null;
     viewState = CreateViewState(gameStart());
-
     /*
     viewState = CreateViewState(
         {
-            cells: [
-                [1024, 1024, 8, 16],
-                [32, 64, 128, 256],
-                [512, 1024, 2, 4],
-                [8, 16, 32, null]
+            board: [
+                [Cell(1024), Cell(1024), Cell(1024), Cell(16)],
+                [Cell(32), Cell(64), Cell(128), Cell(256)],
+                [Cell(512), Cell(1024), Cell(2), Cell(4)],
+                [Cell(8), Cell(16), Cell(32), null]
             ],
             score: 0,
-            type: "Gaming"
+            type: "Gaming",
+            moveNumber: 0
         }
     )*/
 }
@@ -151,3 +150,12 @@ function drageOffset2Direction(offset: Vector) {
         else
             return MoveDirections.Up;
 }
+
+/*
+function Cell(value: number | null): Cell | null {
+    if (value)
+        return { value, source: { type: "Generate" } }
+    else
+        return null;
+
+}*/
