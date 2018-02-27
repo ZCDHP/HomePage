@@ -92,7 +92,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 description: "A simple and crude imitation to Flappy Bird.",
                 coverPath: "./flappy/cover.png",
                 constructor: id => <Flappy id={id} />,
-                publishDate: new Date("2018-02-13")
+                publishDate: new Date("2018-02-27")
             }
         ]} />,
         document.body);
