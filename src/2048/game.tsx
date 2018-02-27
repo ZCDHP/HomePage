@@ -65,39 +65,22 @@ export class Game extends React.Component<{ id: string }, { score: number, score
                     <canvas
                         id={this.props.id}
                         className="col-xs-12 col-sm-8 offset-sm-2 col-md-6 offset-md-3"
+                        style={{ touchAction: "none" }}
                         onMouseDown={ev => {
                             ev.preventDefault();
-                            this.drag = {
-                                x: ev.clientX,
-                                y: ev.clientY
-                            };
+                            this.startDrag(new Vector(ev.clientX, ev.clientY));
+                        }}
+                        onTouchStart={ev => {
+                            ev.preventDefault();
+                            this.startDrag(new Vector(ev.touches[0].clientX, ev.touches[0].clientY));
                         }}
                         onMouseUp={ev => {
                             ev.preventDefault();
-                            if (this.drag == null)
-                                return;
-
-                            const offset = Vector.subtracion({
-                                x: ev.clientX,
-                                y: ev.clientY
-                            }, this.drag);
-                            if (Math.max(Math.abs(offset.x), Math.abs(offset.y)) < 50)
-                                return;
-                            const currentTime = window.performance.now();
-                            const newState = move(this.viewState.gameState, drageOffset2Direction(offset));
-                            if (newState.moveNumber == this.viewState.gameState.moveNumber)
-                                return;
-                            this.viewState = {
-                                gameState: newState,
-                                startTime: window.performance.now()
-                            };
-                            this.setState(oldState => {
-                                return {
-                                    score: newState.score,
-                                    scoreAddition: newState.score == oldState.score ? undefined : newState.score - oldState.score
-                                };
-                            });
-                            this.drag = null;
+                            this.endDrag(new Vector(ev.clientX, ev.clientY));
+                        }}
+                        onTouchEnd={ev => {
+                            ev.preventDefault();
+                            this.endDrag(new Vector(ev.changedTouches[0].clientX, ev.changedTouches[0].clientY));
                         }}
                     />
                 </div>
@@ -118,6 +101,33 @@ export class Game extends React.Component<{ id: string }, { score: number, score
 
         const startTime = window.performance.now();
         requestAnimationFrame(nextMS => onFrame(nextMS, startTime));
+    }
+
+    startDrag = (point: Vector) => this.drag = point;
+    endDrag = (point: Vector) => {
+        if (this.drag == null)
+            return;
+
+        const offset = Vector.subtracion(point, this.drag);
+        if (Math.max(Math.abs(offset.x), Math.abs(offset.y)) < 50) {
+            this.drag = null;
+            return;
+        }
+        const currentTime = window.performance.now();
+        const newState = move(this.viewState.gameState, drageOffset2Direction(offset));
+        if (newState.moveNumber == this.viewState.gameState.moveNumber)
+            return;
+        this.viewState = {
+            gameState: newState,
+            startTime: window.performance.now()
+        };
+        this.setState(oldState => {
+            return {
+                score: newState.score,
+                scoreAddition: newState.score == oldState.score ? undefined : newState.score - oldState.score
+            };
+        });
+        this.drag = null;
     }
 
     drag: Vector | null = null;
