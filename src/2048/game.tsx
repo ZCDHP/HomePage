@@ -101,6 +101,12 @@ export class Game extends React.Component<{ id: string }, { score: number, score
 
         const startTime = window.performance.now();
         requestAnimationFrame(nextMS => onFrame(nextMS, startTime));
+
+        document.addEventListener("keydown", this.onKeyDown);
+    }
+
+    componentWillUnmount() {
+        document.removeEventListener("keydown", this.onKeyDown);
     }
 
     startDrag = (point: Vector) => this.drag = point;
@@ -113,8 +119,23 @@ export class Game extends React.Component<{ id: string }, { score: number, score
             this.drag = null;
             return;
         }
-        const currentTime = window.performance.now();
-        const newState = move(this.viewState.gameState, drageOffset2Direction(offset));
+
+        this.moveDirection(drageOffset2Direction(offset));
+        this.drag = null;
+    }
+
+    onKeyDown = (ev: KeyboardEvent) => {
+        if (ev.altKey || ev.ctrlKey || ev.metaKey || ev.shiftKey)
+            return;
+        const dir = key2Direction(ev.key);
+        if (dir) {
+            ev.preventDefault();
+            this.moveDirection(dir);
+        }
+    }
+
+    moveDirection = (dir: MoveDirections) => {
+        const newState = move(this.viewState.gameState, dir);
         if (newState.moveNumber == this.viewState.gameState.moveNumber)
             return;
         this.viewState = {
@@ -127,7 +148,6 @@ export class Game extends React.Component<{ id: string }, { score: number, score
                 scoreAddition: newState.score == oldState.score ? undefined : newState.score - oldState.score
             };
         });
-        this.drag = null;
     }
 
     drag: Vector | null = null;
@@ -159,6 +179,19 @@ function drageOffset2Direction(offset: Vector) {
             return MoveDirections.Down;
         else
             return MoveDirections.Up;
+}
+
+function key2Direction(key: string): MoveDirections | null {
+    if (key == "ArrowUp" || key == "w")
+        return MoveDirections.Up;
+    else if (key == "ArrowDown" || key == "s")
+        return MoveDirections.Down;
+    else if (key == "ArrowLeft" || key == "a")
+        return MoveDirections.Left;
+    else if (key == "ArrowRight" || key == "d")
+        return MoveDirections.Right;
+
+    return null;
 }
 
 /*
