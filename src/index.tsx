@@ -2,6 +2,7 @@ import * as React from "react";
 import * as ReactDom from 'react-dom'
 
 import { Main as Flappy } from './flappy/main'
+import { Game as _2048 } from './2048/game'
 
 interface GameDescription {
     name: string
@@ -79,6 +80,13 @@ class Index extends React.Component<{ games: GameDescription[] }, { playing: Gam
 document.addEventListener('DOMContentLoaded', () => {
     ReactDom.render(
         <Index games={[
+            {
+                name: "2048",
+                description: "A simple and crude imitation to 2048.",
+                coverPath: "./2048/cover.png",
+                constructor: id => <_2048 id={id} />,
+                publishDate: new Date('2030-01-01')
+            },
             {
                 name: "Flappy",
                 description: "A simple and crude imitation to Flappy Bird.",
