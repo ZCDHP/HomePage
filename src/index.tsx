@@ -85,14 +85,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 description: "A simple and crude imitation to 2048.",
                 coverPath: "./2048/cover.png",
                 constructor: id => <_2048 id={id} />,
-                publishDate: new Date('2030-01-01')
+                publishDate: new Date('2018-02-27')
             },
             {
                 name: "Flappy",
                 description: "A simple and crude imitation to Flappy Bird.",
                 coverPath: "./flappy/cover.png",
                 constructor: id => <Flappy id={id} />,
-                publishDate: new Date("2018-02-27")
+                publishDate: new Date("2018-02-13")
             }
         ]} />,
         document.body);
