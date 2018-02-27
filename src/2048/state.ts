@@ -2,7 +2,7 @@ import { strEnum, assertUnreachable } from "../util"
 import Vector from "../flappy/linear/vector";
 import { List } from "immutable"
 
-export const GameStateTypes = strEnum(["Gaming", "GameOver"]);
+export const GameStateTypes = strEnum(["Gaming", "GameOver", "Win"]);
 type GameStateTypes = keyof typeof GameStateTypes;
 
 export const MoveDirections = strEnum(["Up", "Down", "Left", "Right"]);
@@ -67,6 +67,20 @@ export function move(oldState: GameState, dir: MoveDirections): MoveResult {
                 generated: result!.generated
             };
         }, { gameState: oldState, moved: List(), merged: List(), generated: List() });
+
+    if (moveResult.merged.some(x => x!.cell == 2048)) {
+        return {
+            gameState: {
+                cells: moveResult.gameState.cells,
+                score: moveResult.gameState.score,
+                type: GameStateTypes.Win
+            },
+            moved: moveResult.moved,
+            merged: moveResult.merged,
+            generated: moveResult.generated
+        }
+    }
+
 
     if (moveResult.moved.count() > 0) {
         const newCell = tryGenerateNewCell(moveResult.gameState.cells);

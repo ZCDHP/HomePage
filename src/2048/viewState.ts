@@ -78,8 +78,13 @@ export function render(context: CanvasRenderingContext2D, state: ViewState) {
         })
     }
 
-    if (passed > mergeStart + mergeDur && state.gameState.type == GameStateTypes.GameOver)
-        reunderGameOver(context);
+    if (passed > mergeStart + mergeDur) {
+        if (state.gameState.type == GameStateTypes.GameOver)
+            renderGameOver(context);
+        else if (state.gameState.type == GameStateTypes.Win)
+            renderWin(context);
+    }
+
 }
 
 function percentage2MergingScale(p: number) {
@@ -139,7 +144,7 @@ function renderCellNumber(context: CanvasRenderingContext2D, cell: Cell, pos: Ve
         cellWidth / 2);
 }
 
-function reunderGameOver(context: CanvasRenderingContext2D) {
+function renderGameOver(context: CanvasRenderingContext2D) {
     context.fillStyle = "rgba(238, 228, 218, 0.73)";
     context.fillRect(0, 0, 900, 900);
 
@@ -147,6 +152,16 @@ function reunderGameOver(context: CanvasRenderingContext2D) {
     context.font = "700 120px sans-serif";
     context.textAlign = "center"
     context.fillText("Game Over", 450, 450);
+}
+
+function renderWin(context: CanvasRenderingContext2D) {
+    context.fillStyle = "rgba(237, 194, 46, 0.5)";
+    context.fillRect(0, 0, 900, 900);
+
+    context.fillStyle = "#f9f6f2";
+    context.font = "700 120px sans-serif";
+    context.textAlign = "center"
+    context.fillText("You Win", 450, 450);
 }
 
 function cellBackgroundColor(cell: Cell): string {
