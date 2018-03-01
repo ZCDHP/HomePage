@@ -1,11 +1,9 @@
 type RouteHandler = (pathSegments: string[]) => void;
 
-export default function HashRoute(handler: RouteHandler) {
-    const handlerPath = () => {
-        const pathSegments = (window.location.href.split('#')[1] || '').split('/').filter(x => x != '');
-        handler(pathSegments);
-    };
+export function ListenRouteChange(handler: RouteHandler) {
+    window.addEventListener("popstate", () => handler(CurrentRoute()));
+}
 
-    document.addEventListener("DOMContentLoaded", handlerPath);
-    window.addEventListener("popstate", handlerPath);
+export function CurrentRoute() {
+    return (window.location.href.split('#')[1] || '').split('/').filter(x => x != '');
 }

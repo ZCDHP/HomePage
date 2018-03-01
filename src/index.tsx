@@ -1,7 +1,7 @@
 import * as React from "react";
 import * as ReactDom from 'react-dom'
 
-import HashRouter from './hashRouter';
+import { CurrentRoute, ListenRouteChange } from './hashRouter';
 import { parseRoute, RouteType, Route } from './routing';
 
 import GameDescription from "./gameDescription";
@@ -16,8 +16,8 @@ import "./index.scss";
 class Main extends React.Component<{}, Route>{
     constructor(prop: {}) {
         super(prop);
-        this.state = parseRoute([]);
-        HashRouter(stringSegments => this.setState(parseRoute(stringSegments)));
+        this.state = parseRoute(CurrentRoute());
+        ListenRouteChange(pathSegments => this.setState(parseRoute(pathSegments)));
     }
 
     render() {
@@ -48,8 +48,7 @@ class Main extends React.Component<{}, Route>{
     }
 }
 
+
 document.addEventListener('DOMContentLoaded', () => {
-    ReactDom.render(
-        <Main />,
-        document.body);
+    ReactDom.render(<Main />, document.body);
 });
