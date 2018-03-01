@@ -6,7 +6,7 @@ export default class MainFrame extends React.Component<{ title: string }> {
         return (
             <div id="main" className="container-fluid p-0">
                 <div id="header" className="container-fluid text-center">
-                    <nav className="nav" >
+                    <nav id="header-nav" className="nav" >
                         <a className="nav-link active" href="/#">Home</a>
                     </nav>
                 </div>

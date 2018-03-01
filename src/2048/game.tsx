@@ -12,60 +12,30 @@ export class Game extends React.Component<{ id: string }, { score: number, score
 
     render() {
         return (
-            <div className="container-fluid text-center my-5">
-                <style>
-                    {` 
-                    @keyframes move-up {
-                        0% {
-                          top: 25px;
-                          opacity: 1; }
-                      
-                        100% {
-                          top: -50px;
-                          opacity: 0; } 
-                    }
-                    
-                    .score-addition{
-                        position: absolute;
-                        font-size: 25px;
-                        line-height: 25px;
-                        font-weight: bold;
-                        z-index: 100;
-                        color: rgba(119, 110, 101, 0.9);
-                        animation: move-up 600ms ease-in;
-                        animation-fill-mode: both;
-                    }`}
-                </style>
-                <div className="row">
-                    <div className="container-fluid d-flex align-items-end flex-row-reverse col-xs-12 col-sm-8 offset-sm-2 col-md-6 offset-md-3">
-                        <div className="px-3"
-                            style={{ backgroundColor: "rgb(187, 173, 160)", borderRadius: "3px", fontWeight: 700, fontFamily: '"Clear Sans", "Helvetica Neue", Arial, sans-serif' }}>
+            <div className="_2048 container-fluid row text-center my-5">
+                <div className="col-xs-12 col-sm-8 offset-sm-2 col-md-6 offset-md-3">
+
+                    <div className="above-game container-fluid d-flex align-items-end flex-row-reverse">
+                        <div className="score-container px-3">
                             {this.state.scoreAddition &&
                                 <div key={this.state.score} className="score-addition text-center">
                                     <p>+{this.state.scoreAddition}</p>
                                 </div>}
-                            <p className="mt-1 mb-0" style={{ fontSize: "0.9em", color: "rgb(238, 228, 218)" }}>SCORE</p>
-                            <p className="my-0" style={{ fontSize: "1.5em", color: "rgb(255, 255, 255)" }}>
-                                {this.state.score}
-                            </p>
+                            <p className="score-label mt-1 mb-0">SCORE</p>
+                            <p className="score-value my-0">{this.state.score}</p>
                         </div>
-                        <div className="px-3" >
-                            <button type="button" className="btn btn-light"
-                                style={{ backgroundColor: "rgb(143, 122, 102)", color: "rgb(249, 246, 242)", borderRadius: "3px", fontWeight: 700, fontFamily: '"Clear Sans", "Helvetica Neue", Arial, sans-serif' }}
-                                onClick={() => {
-                                    this.setState({ score: 0 });
-                                    this.viewState = CreateViewState(gameStart());
-                                }} >
-                                New Game
-                            </button>
-                        </div>
+                        <button type="button" className="new-game btn btn-light mx-3"
+                            onClick={() => {
+                                this.setState({ score: 0 });
+                                this.viewState = CreateViewState(gameStart());
+                            }} >
+                            New Game
+                        </button>
                     </div>
-                </div>
-                <div className="row my-3">
+
                     <canvas
                         id={this.props.id}
-                        className="col-xs-12 col-sm-8 offset-sm-2 col-md-6 offset-md-3"
-                        style={{ touchAction: "none" }}
+                        className="game-2048 my-3 w-100"
                         onMouseDown={ev => {
                             ev.preventDefault();
                             this.startDrag(new Vector(ev.clientX, ev.clientY));
@@ -83,6 +53,7 @@ export class Game extends React.Component<{ id: string }, { score: number, score
                             this.endDrag(new Vector(ev.changedTouches[0].clientX, ev.changedTouches[0].clientY));
                         }}
                     />
+
                 </div>
             </div >);
     }

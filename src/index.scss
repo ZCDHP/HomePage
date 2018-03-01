@@ -1,0 +1,10 @@
+@import "components/mainFrame";
+@import "components/gameEntryPage";
+@import "components/gamePage";
+
+@import "2048/game";
+
+html,body {
+    overflow-x: hidden;
+}
+

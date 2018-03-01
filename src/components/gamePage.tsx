@@ -5,7 +5,7 @@ export default class GamePlayPage extends React.Component<GameDescription> {
     render() {
         return (
             <div id="body" className="row">
-                <div id="content" className="col-lg-8 offset-lg-1 text-center">
+                <div className="game-body col-lg-8 offset-lg-1 text-center">
                     <h1> {this.props.name}</h1>
                     <p className="publish-date font-weight-light">{this.props.publishDate.toLocaleDateString()}</p>
                     {this.props.children}

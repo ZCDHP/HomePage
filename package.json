@@ -6,8 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "devserver": "node ./devserver/devserver.js",
-    "build-dev": "./node_modules/.bin/webpack --config ./webpack.dev.js && npm run assets",
-    "build-prod": "./node_modules/.bin/webpack --config ./webpack.prod.js && npm run assets",
+    "build-dev": "./node_modules/.bin/webpack --config ./webpack.js --env.dev && npm run assets",
+    "build-prod": "./node_modules/.bin/webpack --config ./webpack.js --env.prod && npm run assets",
     "assets": "cp ./src/index.html ./dist/index.html && mkdir -p ./dist/flappy/ && cp -a ./src/flappy/asset/. ./dist/flappy/ && mkdir -p ./dist/2048/ && cp -a ./src/2048/asset/. ./dist/2048/"
   },
   "author": "",
@@ -17,14 +17,17 @@
     "@types/react-dom": "^16.0.3",
     "bezier-easing": "^2.0.3",
     "clean-webpack-plugin": "^0.1.18",
+    "css-loader": "^0.28.10",
     "immutable": "^3.8.2",
     "koa": "^2.5.0",
     "koa-static": "^4.0.2",
+    "node-sass": "^4.7.2",
+    "sass-loader": "^6.0.6",
+    "style-loader": "^0.20.2",
     "ts-loader": "^3.5.0",
     "typescript": "^2.7.1",
     "uglifyjs-webpack-plugin": "^1.1.8",
-    "webpack": "^3.10.0",
-    "webpack-merge": "^4.1.1"
+    "webpack": "^3.10.0"
   },
   "dependencies": {
     "@types/bezier-easing": "^2.0.0"

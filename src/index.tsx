@@ -11,6 +11,8 @@ import MainFrame from "./components/mainFrame";
 import GameEntryPage from "./components/gameEntryPage";
 import GamePage from "./components/gamePage";
 
+import "./index.scss";
+
 class Main extends React.Component<{}, Route>{
     constructor(prop: {}) {
         super(prop);
