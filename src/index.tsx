@@ -19,29 +19,29 @@ class Main extends React.Component<{}, Route>{
     }
 
     render() {
+        const { title, body } = this.bodaAndTitle(this.state);
         return (
-            <MainFrame >
-                {this.renderBody(this.state)}
+            <MainFrame title={title} >
+                <div id="main" className="container-fluid p-0">
+                    {body}
+                </div>
             </MainFrame>
         );
     }
 
-    private renderBody = (route: Route) => {
+    private bodaAndTitle = (route: Route) => {
         switch (route.type) {
             case RouteType.Index:
-                return <div id="main" className="container-fluid p-0"><GameEntryPage games={Games} /></div>;
+                return { title: "ZCDHP's Home Page", body: <GameEntryPage games={Games} /> };
             case RouteType.Game:
                 const game = Games.find(x => x.id == route.id);
                 if (game)
-                    return (
-                        <div id="main" className="container-fluid p-0">
-                            <GamePage {...game}>
-                                {game.constructor("game")}
-                            </GamePage>
-                        </div >
-                    );
+                    return {
+                        title: game.name,
+                        body: <GamePage {...game}> {game.constructor("game")}</GamePage>
+                    };
             default:
-                return <h1>NOT FOUND</h1>;
+                return { title: "NOT FOUND", body: <h1>NOT FOUND</h1> };
         }
     }
 }

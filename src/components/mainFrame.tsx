@@ -1,7 +1,8 @@
 import * as React from "react";
 
-export default class MainFrame extends React.Component {
+export default class MainFrame extends React.Component<{ title: string }> {
     render() {
+        document.title = this.props.title;
         return (
             <div id="main" className="container-fluid p-0">
                 <div id="header" className="container-fluid text-center">
