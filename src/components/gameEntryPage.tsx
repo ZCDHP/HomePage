@@ -6,13 +6,19 @@ class GameEntry extends React.Component<{ game: GameDescription }> {
     render() {
         return (
             <a
-                className="btn btn-light mt-3 d-flex flex-column flex-md-row align-items-center align-items-md-start w-100"
+                className="btn btn-light mt-3 px-0 pt-0 w-100"
                 href={RoutePath.Game(this.props.game.id)}>
-                <img className="mx-auto" src={this.props.game.coverPath} alt="Game Cover" style={{ width: "400px", minWidth: "400px", height: "225px" }} />
-                <div className="container-fluid text-center text-md-left mt-4 ml-md-4" style={{ whiteSpace: "normal" }}>
+                <div className="container-fluid m-0 text-center text-md-left" style={{ backgroundColor: "black", color: "white" }}>
                     <h3>{this.props.game.name}</h3>
-                    <p className="publish-date font-weight-light">{this.props.game.publishDate.toLocaleDateString()}</p>
-                    <p>{this.props.game.description}</p>
+                </div>
+                <div className="d-flex flex-column-reverse flex-md-row align-items-center align-items-md-start w-100">
+                    <div className="container-fluid text-center text-md-left" style={{ whiteSpace: "normal" }}>
+                        <p className="publish-date font-weight-light p-1">{this.props.game.publishDate.toLocaleDateString()}</p>
+                        <p className="m-auto">{this.props.game.description}</p>
+                    </div>
+                    <div style={{ width: "400px", height: "225px", minWidth: "400px" }}>
+                        <img className="mx-auto  rounded" src={this.props.game.coverPath} alt="Game Cover" style={{ maxWidth: "400px", maxHeight: "225px" }} />
+                    </div>
                 </div>
             </a>
         );
