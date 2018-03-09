@@ -4,8 +4,17 @@ import GameDescription from "./gameDescription";
 
 import { Main as Flappy } from './flappy/main'
 import { Game as _2048 } from './2048/game'
+import { Game as TH_slg } from './th_slg/game'
 
 const Games: GameDescription[] = [
+    {
+        id: "th_slg",
+        name: "TH SLG",
+        description: "A SLG played by Secret Sealing Club to kill a afternoon.",
+        coverPath: "./th_slg/cover.png",
+        constructor: id => <TH_slg id={id} />,
+        publishDate: new Date('3000-01-01')
+    },
     {
         id: "2048",
         name: "2048",
