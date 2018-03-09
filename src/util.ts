@@ -1,4 +1,5 @@
 import * as BezierEasing from 'bezier-easing'
+import { List } from "immutable"
 
 export function assertUnreachable(x: never): never {
     throw new Error("Didn't expect to get here");
@@ -22,4 +23,23 @@ export function scaleCanvas(context: CanvasRenderingContext2D, expectedWidth: nu
 export class Bazier {
     public static ease_in_out = BezierEasing(0.42, 0, 0.58, 1);
     public static ease = BezierEasing(0.25, 0.1, 0.25, 1);
+}
+
+
+interface Coordinated2<T> {
+    corrdinate: { x: number, y: number },
+    value: T
+};
+export class Array2 {
+
+    public static reduce<TArr, TOut>(array2: TArr[][], init: TOut, reducer: (lc: Coordinated2<TArr>, value: TOut) => TOut) {
+        return array2.reduce((rowv, row, x) => row.reduce((cellv, cell, y) => reducer({ corrdinate: { x, y }, value: cell }, cellv), rowv), init)
+    }
+    public static expand<TArr>(array2: TArr[][]): Coordinated2<TArr>[] {
+        return Array2.reduce<TArr, List<Coordinated2<TArr>>>(
+            array2,
+            List(),
+            (lc, list) => list.push(lc))
+            .toArray();
+    }
 }
