@@ -52,7 +52,7 @@ export class Game extends React.Component<{ id: string }>{
     }
 
     mousePosition(e: React.MouseEvent<HTMLCanvasElement>): Vector {
-        return Vector.scale(new Vector(e.clientX, e.clientY), this.scale);
+        return Vector.scale(new Vector(e.clientX, e.clientY), 1 / this.scale);
     }
 
     viewState: View.ViewState = { gameState: InitialGameState, boardScale: 1, boardOffset: new Vector(0, 0) }
