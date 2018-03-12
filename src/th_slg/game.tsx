@@ -10,11 +10,10 @@ export class Game extends React.Component<{ id: string }>{
     render() {
         return <canvas
             id={this.props.id}
-            className="col-md-12 col-xl-10 offset-xl-1"
+            className="col-md-12 col-xl-10 offset-xl-1 p-0"
             onWheel={e => {
                 this.viewState = View.scale(this.viewState, this.mousePosition(e), e.deltaY);
                 e.preventDefault();
-                return false;
             }}
             onMouseDown={e => {
                 e.preventDefault();
@@ -28,16 +27,19 @@ export class Game extends React.Component<{ id: string }>{
                 e.preventDefault();
                 this.viewState = View.drop(this.viewState, this.mousePosition(e));
             }}
+            onClick={e => {
+                e.preventDefault();
+                this.viewState = View.click(this.viewState, this.mousePosition(e));
+            }}
         />
     }
 
     componentDidMount() {
-        const canvas = document.getElementById(this.props.id) as HTMLCanvasElement;
-        canvas.onselectstart = _ => false;
-        const context = canvas.getContext("2d") as CanvasRenderingContext2D;
+        this.canvas = document.getElementById(this.props.id) as HTMLCanvasElement;
+        this.canvas.onselectstart = _ => false;
+        const context = this.canvas.getContext("2d") as CanvasRenderingContext2D;
         window.onresize = _ => this.scale = scaleCanvas(context, 1600, 900);
         this.scale = scaleCanvas(context, 1600, 900);
-
 
         const onFrame = (currentMS: number, lastMS: number) => {
             //this.gameState = frame(currentMS - lastMS, this.gameState);
@@ -52,9 +54,16 @@ export class Game extends React.Component<{ id: string }>{
     }
 
     mousePosition(e: React.MouseEvent<HTMLCanvasElement>): Vector {
-        return Vector.scale(new Vector(e.clientX, e.clientY), 1 / this.scale);
+        const rect = this.canvas!.getBoundingClientRect();
+        return Vector.scale(
+            Vector.subtracion(
+                new Vector(e.clientX, e.clientY),
+                new Vector(rect.left, rect.top)),
+            1 / this.scale
+        );
     }
 
     viewState: View.ViewState = { gameState: InitialGameState, boardScale: 1, boardOffset: new Vector(0, 0) }
     scale: number = 0;
+    canvas: HTMLCanvasElement | null = null;
 }

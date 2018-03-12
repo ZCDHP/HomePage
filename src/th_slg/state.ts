@@ -1,4 +1,5 @@
-import { strEnum, assertUnreachable } from "../util"
+import { strEnum, assertUnreachable, Array2 } from "../util"
+import Vector from "../flappy/linear/vector";
 
 function Tile(terrain: TerrainType, unit?: Unit): Tile { return { terrain, unit }; }
 
@@ -29,4 +30,15 @@ export const InitialState: State = {
         [Tile_Sea, Tile_Pain, Tile_Pain, Tile_Pain, Tile_Pain, Tile_Sea],
         [Tile_Sea, Tile_Sea, Tile_Sea, Tile_Sea, Tile_Sea, Tile_Sea],
     ]
+}
+
+export function getMoveablePositions(state: State, unitAt: Vector): Vector[] {
+    const unit = state.board[unitAt.x][unitAt.y].unit as Unit;
+    return Array2.expand(state.board)
+        .map(x => x.corrdinate)
+        .filter(x => {
+            const offset = Vector.subtracion(unitAt, x);
+            const tileCount = Math.abs(offset.x) + Math.abs(offset.y);
+            return tileCount <= unit.movement;
+        });
 }
