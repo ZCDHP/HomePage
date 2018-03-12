@@ -1,4 +1,4 @@
-import { State as GameState, Tile, TileType } from './state';
+import { State as GameState, Tile, TerrainType, Unit } from './state';
 import { Array2, assertUnreachable } from '../util';
 import Vector from '../flappy/linear/vector';
 
@@ -19,7 +19,7 @@ export interface BoardDragingState {
 export function scale(oldState: ViewState, pos: Vector, scaleDelta: number): ViewState {
     return {
         gameState: oldState.gameState,
-        boardScale: Math.max(0.1, oldState.boardScale + scaleDelta / 1000),
+        boardScale: Math.max(0.1, oldState.boardScale - scaleDelta / 1000),
         boardOffset: oldState.boardOffset
     }
 }
@@ -72,12 +72,18 @@ export function render(context: CanvasRenderingContext2D, viewState: ViewState) 
 }
 
 function renderTile(context: CanvasRenderingContext2D, tile: Tile) {
-    switch (tile.type) {
-        case TileType.Plain:
+    renderTerrain(context, tile.terrain);
+    if (tile.unit)
+        renderUnit(context, tile.unit);
+}
+
+function renderTerrain(context: CanvasRenderingContext2D, terrain: TerrainType) {
+    switch (terrain) {
+        case TerrainType.Plain:
             context.fillStyle = "#82E0AA";
             context.fillRect(0, 0, TileSize, TileSize);
             return;
-        case TileType.Mountain:
+        case TerrainType.Mountain:
             context.fillStyle = "#82E0AA";
             context.fillRect(0, 0, TileSize, TileSize);
             context.strokeStyle = "black";
@@ -88,11 +94,18 @@ function renderTile(context: CanvasRenderingContext2D, tile: Tile) {
             context.closePath();
             context.stroke();
             return;
-        case TileType.Sea:
+        case TerrainType.Sea:
             context.fillStyle = "#5DADE2";
             context.fillRect(0, 0, TileSize, TileSize);
             return;
     }
 
-    assertUnreachable(tile.type);
+    assertUnreachable(terrain);
+}
+
+function renderUnit(context: CanvasRenderingContext2D, unit: Unit) {
+    context.fillStyle = 'black';
+    context.font = "40px Arial";
+    context.textBaseline = "top";
+    context.fillText(unit.name, 0, 0, TileSize);
 }
