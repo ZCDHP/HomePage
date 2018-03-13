@@ -133,7 +133,7 @@ export function render(context: CanvasRenderingContext2D, viewState: ViewState) 
             if (viewState.operation &&
                 viewState.operation.type == OperationType.UnitMoving &&
                 viewState.operation.moveablePositions.some(x => Vector.equal(x, tile.corrdinate))) {
-                context.fillStyle = "rgba(192,192,192,0.3)";
+                context.fillStyle = "rgba(255,255,255,0.3)";
                 context.fillRect(0, 0, TileSize, TileSize);
             }
 
