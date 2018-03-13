@@ -63,7 +63,12 @@ export class Game extends React.Component<{ id: string }>{
         );
     }
 
-    viewState: View.ViewState = { gameState: InitialGameState, boardScale: 1, boardOffset: new Vector(0, 0) }
+    viewState: View.ViewState = {
+        gameState: InitialGameState,
+        boardScale: 1,
+        boardOffset: new Vector(0, 0),
+        boardView: { type: "None" }
+    }
     scale: number = 0;
     canvas: HTMLCanvasElement | null = null;
 }
