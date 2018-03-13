@@ -33,7 +33,8 @@ module.exports = evn => {
         externals: {
             "react": "React",
             "react-dom": "ReactDOM",
-            "immutable": "Immutable"
+            "immutable": "Immutable",
+            "immer": "immer"
         },
         plugins: [new CleanWebpackPlugin(['dist'])],
         devtool: isProd ? undefined : 'inline-source-map',

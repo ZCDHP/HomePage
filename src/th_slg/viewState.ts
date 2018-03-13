@@ -6,6 +6,8 @@ import * as BoardView from './viewState.board';
 import { Array2, strEnum, assertUnreachable } from '../util';
 import Vector from '../flappy/linear/vector';
 
+import immer from 'immer'
+
 const TileSize = 120;
 
 export interface ViewState {
@@ -24,48 +26,36 @@ interface BoardDragging {
 // Interactions
 
 export function scale(oldState: ViewState, pos: Vector, scaleDelta: number): ViewState {
-    return {
-        gameState: oldState.gameState,
-        boardScale: Math.max(0.1, oldState.boardScale - scaleDelta / 1000),
-        boardOffset: oldState.boardOffset,
-        boardView: oldState.boardView,
-        dragging: oldState.dragging
-    }
+    return immer(oldState, draft => {
+        draft.boardScale = Math.max(0.1, oldState.boardScale - scaleDelta / 1000)
+    });
 }
 
 export function dragStart(oldState: ViewState, pos: Vector): ViewState {
-    return {
-        gameState: oldState.gameState,
-        boardScale: oldState.boardScale,
-        boardOffset: oldState.boardOffset,
-        boardView: oldState.boardView,
-        dragging: {
+    return immer(oldState, draft => {
+        draft.dragging = {
             startBoardOffset: oldState.boardOffset,
             startPisotion: pos
         }
-    };
+    });
 }
 
 export function move(oldState: ViewState, pos: Vector): ViewState {
     if (!oldState.dragging)
         return oldState;
 
-    return {
-        gameState: oldState.gameState,
-        boardScale: oldState.boardScale,
-        boardOffset: Vector.add(oldState.dragging.startBoardOffset, Vector.subtracion(pos, oldState.dragging.startPisotion)),
-        boardView: oldState.boardView,
-        dragging: oldState.dragging
-    };
+    const drag = oldState.dragging;
+    return immer(oldState, draft => {
+        draft.boardOffset = Vector.add(
+            drag.startBoardOffset,
+            Vector.subtracion(
+                pos,
+                drag.startPisotion));
+    });
 }
 
 export function drop(oldState: ViewState, pos: Vector): ViewState {
-    return {
-        gameState: oldState.gameState,
-        boardScale: oldState.boardScale,
-        boardOffset: oldState.boardOffset,
-        boardView: oldState.boardView,
-    };
+    return immer(oldState, draft => draft.dragging = undefined);
 }
 
 export function click(oldState: ViewState, pos: Vector): ViewState {
@@ -76,13 +66,9 @@ export function click(oldState: ViewState, pos: Vector): ViewState {
 
     if (boardPos.x < 0 || boardPos.y < 0 || boardPos.x > boardSize.x || boardPos.y > boardSize.y)
         return oldState;
-    return {
-        gameState: oldState.gameState,
-        boardScale: oldState.boardScale,
-        boardOffset: oldState.boardOffset,
-        boardView: BoardView.click(oldState.boardView, boardPos, oldState.gameState),
-        dragging: oldState.dragging
-    }
+    return immer(oldState, draft => {
+        draft.boardView = BoardView.click(oldState.boardView, boardPos, oldState.gameState)
+    });
 }
 
 // rendering
