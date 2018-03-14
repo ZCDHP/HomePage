@@ -202,12 +202,11 @@ export function render(context: CanvasRenderingContext2D, boardViewVtate: BoardV
                 const dirs = MapFragment.get(tile.corrdinate.x, tile.corrdinate.y, pathMap)
                 if (dirs) {
                     context.fillStyle = "rgba(229,70,70,0.3)";
-                    context.fillRect(PathPosition, PathPosition, PathSize, PathSize);
                     List(dirs).flatMap<Vector, Vector>(dir => [
                         Vector.add(PathPositionVector, new Vector(dir!.x * PathSize, dir!.y * PathSize)),
                         Vector.add(PathPositionVector, new Vector(dir!.x * SidePathOffest, dir!.y * SidePathOffest))])
+                        .concat([PathPositionVector])
                         .forEach(pos => context.fillRect(pos!.x, pos!.y, PathSize, PathSize));
-
                 }
             }
 
