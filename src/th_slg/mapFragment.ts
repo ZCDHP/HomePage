@@ -25,3 +25,7 @@ export function map<T, TOut>(func: (x: number, y: number, v: T) => TOut, map: Ma
 
     return result
 }
+
+export function contains<T>(x: number, y: number, map: MapFragment<T>): boolean {
+    return Boolean(map[x] && map[x][y]);
+}

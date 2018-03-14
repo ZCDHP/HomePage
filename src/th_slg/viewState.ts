@@ -1,12 +1,9 @@
-import {
-    State as GameState, Tile, TerrainType, Unit,
-    getMoveablePositions
-} from './state';
+import immer from 'immer'
+import { State as GameState, Tile, TerrainType, Unit } from './state';
 import * as BoardView from './viewState.board';
 import { Array2, strEnum, assertUnreachable } from '../util';
 import Vector from '../flappy/linear/vector';
 
-import immer from 'immer'
 
 const TileSize = 120;
 
@@ -41,16 +38,23 @@ export function dragStart(oldState: ViewState, pos: Vector): ViewState {
 }
 
 export function move(oldState: ViewState, pos: Vector): ViewState {
-    if (!oldState.dragging)
-        return oldState;
+    if (oldState.dragging) {
+        const drag = oldState.dragging;
+        return immer(oldState, draft => {
+            draft.boardOffset = Vector.add(
+                drag.startBoardOffset,
+                Vector.subtracion(
+                    pos,
+                    drag.startPisotion));
+        });
+    }
 
-    const drag = oldState.dragging;
+    const boardPos = getBoardPos(oldState, pos);
+    const boardSize = getBoardSize(oldState, pos);
+    if (boardPos.x < 0 || boardPos.y < 0 || boardPos.x > boardSize.x || boardPos.y > boardSize.y)
+        return oldState;
     return immer(oldState, draft => {
-        draft.boardOffset = Vector.add(
-            drag.startBoardOffset,
-            Vector.subtracion(
-                pos,
-                drag.startPisotion));
+        draft.boardView = BoardView.move(oldState.boardView, boardPos, oldState.gameState);
     });
 }
 
@@ -59,16 +63,23 @@ export function drop(oldState: ViewState, pos: Vector): ViewState {
 }
 
 export function click(oldState: ViewState, pos: Vector): ViewState {
-    const boardPos = Vector.scale(Vector.subtracion(pos, oldState.boardOffset), oldState.boardScale);
-    const boardSize = Vector.scale(
-        new Vector(oldState.gameState.board.length, oldState.gameState.board[0].length),
-        TileSize * oldState.boardScale);
+    const boardPos = getBoardPos(oldState, pos);
+    const boardSize = getBoardSize(oldState, pos);
 
     if (boardPos.x < 0 || boardPos.y < 0 || boardPos.x > boardSize.x || boardPos.y > boardSize.y)
         return oldState;
     return immer(oldState, draft => {
         draft.boardView = BoardView.click(oldState.boardView, boardPos, oldState.gameState)
     });
+}
+
+function getBoardPos(state: ViewState, pos: Vector) {
+    return Vector.scale(Vector.subtracion(pos, state.boardOffset), state.boardScale);
+}
+function getBoardSize(state: ViewState, pos: Vector) {
+    return Vector.scale(
+        new Vector(state.gameState.board.length, state.gameState.board[0].length),
+        TileSize * state.boardScale);
 }
 
 // rendering
