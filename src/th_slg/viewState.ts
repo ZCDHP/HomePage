@@ -74,7 +74,7 @@ export function click(oldState: ViewState, pos: Vector): ViewState {
 }
 
 function getBoardPos(state: ViewState, pos: Vector) {
-    return Vector.scale(Vector.subtracion(pos, state.boardOffset), state.boardScale);
+    return Vector.scale(Vector.subtracion(pos, state.boardOffset), 1 / state.boardScale);
 }
 function getBoardSize(state: ViewState, pos: Vector) {
     return Vector.scale(
