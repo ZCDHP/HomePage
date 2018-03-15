@@ -1,6 +1,8 @@
 import { strEnum, assertUnreachable, Array2 } from "../util"
 import Vector from "../flappy/linear/vector";
 import Map2d from "./map2d";
+import { List } from "immutable";
+import immer from "immer";
 
 function Tile(terrain: TerrainType, unit?: Unit): Tile { return { terrain, unit }; }
 
@@ -61,4 +63,26 @@ function footMovementCost(terrain: TerrainType) {
             return 2;
     }
     assertUnreachable(terrain);
+}
+
+export function moveUnit(from: Vector, path: List<Vector>, oldState: State): State {
+    const unit = oldState.board.get(from)!.unit!;
+    return moveUnitStep(from, from, unit.movement, path, oldState);
+}
+
+export function moveUnitStep(from: Vector, position: Vector, movement: number, path: List<Vector>, oldState: State): State {
+    const unit = oldState.board.get(from)!.unit!;
+
+    if (path.count() == 0)
+        return immer(oldState, draft => {
+            oldState.board = oldState.board
+                .set(from, immer(oldState.board.get(from)!, draft => draft.unit = undefined))
+                .set(position, immer(oldState.board.get(position)!, draft => draft.unit = unit));
+        });
+
+    const nextPosition = Vector.add(position, path.first());
+    const nextMovement = movement - getMovementCost(unit.movementType, oldState.board.get(nextPosition)!.terrain);
+    if (nextMovement < 0)
+        throw new Error("Not reachable");
+    return moveUnitStep(from, nextPosition, nextMovement, path.shift(), oldState);
 }
