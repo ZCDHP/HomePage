@@ -36,11 +36,16 @@ export class Array2 {
     public static reduce<TArr, TOut>(array2: TArr[][], init: TOut, reducer: (lc: Coordinated2<TArr>, value: TOut) => TOut) {
         return array2.reduce((rowv, row, x) => row.reduce((cellv, cell, y) => reducer({ corrdinate: { x, y }, value: cell }, cellv), rowv), init)
     }
+
     public static expand<TArr>(array2: TArr[][]): Coordinated2<TArr>[] {
         return Array2.reduce<TArr, List<Coordinated2<TArr>>>(
             array2,
             List(),
             (lc, list) => list.push(lc))
             .toArray();
+    }
+
+    public static map<TArr>(array2: TArr[][], mapper: (lc: Coordinated2<TArr>) => TArr): TArr[][] {
+        return array2.map((row, x) => row.map((cell, y) => mapper({ corrdinate: { x, y }, value: cell })));
     }
 }

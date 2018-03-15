@@ -1,7 +1,7 @@
 import immer from 'immer'
 import { Stack, List } from 'immutable'
-import { State as GameState, Tile, TerrainType, Unit, getMovementCost } from './state';
-import * as MapFragment from './mapFragment';
+import { State as GameState, Tile, TerrainType, Unit, getMovementCost, State } from './state';
+import Map2d from './map2d';
 import { Array2, strEnum, assertUnreachable } from '../util';
 import Vector from '../flappy/linear/vector';
 
@@ -28,7 +28,6 @@ export interface UnitMoving {
     path: Stack<Step>
 }
 
-
 interface Step {
     direction: Vector
     restMovePoint: number
@@ -38,7 +37,7 @@ interface Step {
 // interaction
 export function click(oldState: BoardViewState, pos: Vector, gameState: GameState): BoardViewState {
     const selectedCell = getboardCell(pos);
-    const unit = gameState.board[selectedCell.x][selectedCell.y].unit;
+    const unit = gameState.board.get(selectedCell)!.unit;
     if (!unit)
         return None;
     return {
@@ -71,8 +70,8 @@ function move_UnitMoving(moving: UnitMoving, pos: Vector, gameState: GameState):
         !moving.moveablePositions.some(p => Vector.equal(p, selectedCell)))  // Un reachable
         return moving;
 
-    const moveCostMap = createMovementCostMap(gameState, moving.unitPosition, moving.moveablePositions);
-    const unit = gameState.board[moving.unitPosition.x][moving.unitPosition.y].unit as Unit;
+    const moveCostMap = createMoveCostMap(gameState, moving.unitPosition, moving.moveablePositions);
+    const unit = gameState.board.get(moving.unitPosition)!.unit as Unit;
 
     // Some where already on path
     if (moving.path.some(x => Vector.equal(x!.position, selectedCell)))
@@ -87,7 +86,7 @@ function move_UnitMoving(moving: UnitMoving, pos: Vector, gameState: GameState):
     const diffVec = Vector.subtracion(selectedCell, lastStep.position);
     if (Math.abs(diffVec.x) + Math.abs(diffVec.y) == 1) {
         const nextDirection = diffVec;
-        const nextMovePoint = lastStep.restMovePoint - moveCostMap[selectedCell.x][selectedCell.y];
+        const nextMovePoint = lastStep.restMovePoint - moveCostMap.get(selectedCell)!;
         if (nextMovePoint >= 0)
             return immer(moving, draft => {
                 draft.path = moving.path.push({
@@ -103,17 +102,17 @@ function move_UnitMoving(moving: UnitMoving, pos: Vector, gameState: GameState):
     });
 }
 
-function findPathTo(path: Stack<Step>, movementMap: MapFragment.MapFragment<number>, target: Vector, avoidDir?: Vector): Stack<Step> {
-    const baseOnCurrent = findPathBaseOn(path, movementMap, target, avoidDir);
+function findPathTo(path: Stack<Step>, moveCostMap: Map2d<number>, target: Vector, avoidDir?: Vector): Stack<Step> {
+    const baseOnCurrent = findPathBaseOn(path, moveCostMap, target, avoidDir);
     if (baseOnCurrent)
         return baseOnCurrent;
     const pathNext = path.pop();
     if (pathNext.isEmpty())
         throw new Error("Un reachable");
-    return findPathTo(pathNext, movementMap, target, path.peek().direction);
+    return findPathTo(pathNext, moveCostMap, target, path.peek().direction);
 }
 
-function findPathBaseOn(path: Stack<Step>, movementMap: MapFragment.MapFragment<number>, target: Vector, avoidDir?: Vector): Stack<Step> | undefined {
+function findPathBaseOn(path: Stack<Step>, moveCostMap: Map2d<number>, target: Vector, avoidDir?: Vector): Stack<Step> | undefined {
     const lastStep = path.peek();
     if (Vector.equal(lastStep.position, target))
         return path;
@@ -121,28 +120,26 @@ function findPathBaseOn(path: Stack<Step>, movementMap: MapFragment.MapFragment<
     const avoidDirs = [avoidDir, Vector.scale(lastStep.direction, -1)].filter(x => x != undefined) as Vector[];
     for (const dir of Dirs.filter(x => !avoidDirs.some(y => Vector.equal(x, y)))) {
         const positionNext = Vector.add(dir, lastStep.position);
-        if (!MapFragment.contains(positionNext.x, positionNext.y, movementMap))
+        const moveCost = moveCostMap.get(positionNext);
+        if (!moveCost)
             continue;
-        const movementNext = lastStep.restMovePoint - movementMap[positionNext.x][positionNext.y];
+        const movementNext = lastStep.restMovePoint - moveCost;
         if (movementNext < 0)
             continue;
 
         const resultNext = findPathBaseOn(
             path.push({ direction: dir, position: positionNext, restMovePoint: movementNext }),
-            movementMap,
+            moveCostMap,
             target);
         if (resultNext)
             return resultNext;
     }
 }
 
-function createMovementCostMap(gameState: GameState, unitAt: Vector, area: Vector[]): MapFragment.MapFragment<number> {
-    const map = MapFragment.create<number>();
-    const unit = gameState.board[unitAt.x][unitAt.y].unit as Unit;
-    for (const pos of area)
-        MapFragment.set(pos.x, pos.y, map, getMovementCost(unit.movementType, gameState.board[pos.x][pos.y].terrain));
-
-    return map;
+function createMoveCostMap(gameState: GameState, unitAt: Vector, area: Vector[]): Map2d<number> {
+    const unit = gameState.board.get(unitAt)!.unit as Unit;
+    const getCost = (pos: Vector) => getMovementCost(unit.movementType, gameState.board.get(pos)!.terrain);
+    return area.reduce<Map2d<number>>((map, pos) => map.set(pos, getCost(pos)), new Map2d<number>());
 }
 
 function getboardCell(pos: Vector): Vector {
@@ -151,67 +148,83 @@ function getboardCell(pos: Vector): Vector {
 }
 
 function getMoveablePositions(state: GameState, unitAt: Vector): Vector[] {
-    const map = MapFragment.create<number>();
-    const unit = state.board[unitAt.x][unitAt.y].unit as Unit;
+    const unit = state.board.get(unitAt)!.unit as Unit;
+    const getCost = (p: Vector) => p.x < 0 || p.y < 0 || p.x >= state.boardSize.x || p.y >= state.boardSize.y ?
+        Number.POSITIVE_INFINITY :
+        getMovementCost(unit.movementType, state.board.get(p)!.terrain);
+    const map = getMoveablePositionsFrom(unitAt, getCost, new Map2d<number>().set(unitAt, unit.movement));
+    return Array.from(map).map(x => x.corrdinate);
+}
 
-    function from(movePoint: number, position: Vector) {
-        Dirs.map(x => Vector.add(x, position))
-            .forEach(p => {
-                if (p.x < 0 || p.y < 0 || p.x >= state.board.length || p.y >= state.board[0].length)
-                    return;
-                const onMap = MapFragment.get(p.x, p.y, map);
-                const restMovePoint = movePoint - getMovementCost(unit.movementType, state.board[p.x][p.y].terrain);
-                if (restMovePoint >= 0 &&
-                    (!onMap || onMap < restMovePoint)) {
-                    MapFragment.set(p.x, p.y, map, restMovePoint);
-                    from(restMovePoint, p);
+function getMoveablePositionsFrom(position: Vector, getCost: (pos: Vector) => number, map: Map2d<number>, queue: List<Vector> = List()): Map2d<number> {
+    const movement = map.get(position)!;
+    const { map: newMap, queue: newQueue } = Dirs
+        .map(x => Vector.add(x, position))
+        .reduce((state, p) => {
+            const existing = map.get(p);
+            const rest = movement - getCost(p);
+            if (rest >= 0 && (!existing || existing < rest)) {
+                return {
+                    map: state.map.set(p, rest),
+                    queue: rest == 0 ? state.queue : state.queue.push(p)
                 }
-            });
+            }
+            else return state;
+        }, { map, queue });
+
+    if (newQueue.isEmpty())
+        return newMap;
+    else {
+        const next = newQueue.first();
+        return getMoveablePositionsFrom(next, getCost, newMap, newQueue.shift());
     }
-
-    MapFragment.set(unitAt.x, unitAt.y, map, unit.movement);
-
-    from(unit.movement, unitAt);
-    return MapFragment.map((x, y, _) => new Vector(x, y), map);
 }
 
 // rendering
 export function render(context: CanvasRenderingContext2D, boardViewVtate: BoardViewState, gameState: GameState) {
-    let pathMap = MapFragment.create<Vector[]>();
-    if (boardViewVtate.type == BoardViewStateType.UnitMoving) {
-        const path = boardViewVtate.path.reverse().toArray();
-        path.forEach((step, index) => {
-            const linkPre = index == 0 ? [] : [Vector.scale(step.direction, -1)];
-            const linkNext = index == path.length - 1 ? [] : [path[index + 1].direction];
-            MapFragment.set(step.position.x, step.position.y, pathMap, [...linkPre, ...linkNext]);
+    const pathMap = getPathMap(boardViewVtate);
+
+    for (const tile of gameState.board)
+        scopeToTile(context, tile.corrdinate, () => {
+            renderTile(context, tile.value);
         });
+
+    if (boardViewVtate.type == BoardViewStateType.UnitMoving) {
+        for (const position of boardViewVtate.moveablePositions)
+            scopeToTile(context, position, () => {
+                context.fillStyle = "rgba(255,255,255,0.3)";
+                context.fillRect(0, 0, TileSize, TileSize);
+            });
+        for (const path of pathMap)
+            scopeToTile(context, path.corrdinate, () => {
+                context.fillStyle = "rgba(229,70,70,0.3)";
+                List(path.value).flatMap<Vector, Vector>(dir => [
+                    Vector.add(PathPositionVector, new Vector(dir!.x * PathSize, dir!.y * PathSize)),
+                    Vector.add(PathPositionVector, new Vector(dir!.x * SidePathOffest, dir!.y * SidePathOffest))])
+                    .concat([PathPositionVector])
+                    .forEach(pos => context.fillRect(pos!.x, pos!.y, PathSize, PathSize));
+            });
     }
+}
 
-    Array2.expand(gameState.board)
-        .forEach(tile => {
-            context.save();
-            context.translate(tile.corrdinate.x * TileSize, tile.corrdinate.y * TileSize);
-            renderTile(context, tile.value)
+function scopeToTile(context: CanvasRenderingContext2D, position: Vector, func: () => void) {
+    context.save();
+    context.translate(position.x * TileSize, position.y * TileSize);
+    func();
+    context.restore();
+}
 
-            if (boardViewVtate.type == BoardViewStateType.UnitMoving) {
-                if (boardViewVtate.moveablePositions.some(x => Vector.equal(x, tile.corrdinate))) {
-                    context.fillStyle = "rgba(255,255,255,0.3)";
-                    context.fillRect(0, 0, TileSize, TileSize);
-                }
+function getPathMap(boardViewVtate: BoardViewState): Map2d<Vector[]> {
+    if (boardViewVtate.type != BoardViewStateType.UnitMoving)
+        return new Map2d();
 
-                const dirs = MapFragment.get(tile.corrdinate.x, tile.corrdinate.y, pathMap)
-                if (dirs) {
-                    context.fillStyle = "rgba(229,70,70,0.3)";
-                    List(dirs).flatMap<Vector, Vector>(dir => [
-                        Vector.add(PathPositionVector, new Vector(dir!.x * PathSize, dir!.y * PathSize)),
-                        Vector.add(PathPositionVector, new Vector(dir!.x * SidePathOffest, dir!.y * SidePathOffest))])
-                        .concat([PathPositionVector])
-                        .forEach(pos => context.fillRect(pos!.x, pos!.y, PathSize, PathSize));
-                }
-            }
-
-            context.restore();
-        })
+    const path = boardViewVtate.path.reverse().toArray();
+    return path
+        .reduce<Map2d<Vector[]>>((map, step, index) => {
+            const linkPre = index == 0 ? [] : [Vector.scale(step!.direction, -1)];
+            const linkNext = index == path.length - 1 ? [] : [path[index + 1].direction];
+            return map.set(step.position, [...linkPre, ...linkNext]);
+        }, new Map2d<Vector[]>());
 }
 
 function renderTile(context: CanvasRenderingContext2D, tile: Tile) {

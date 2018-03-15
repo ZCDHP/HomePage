@@ -1,10 +1,12 @@
 import { strEnum, assertUnreachable, Array2 } from "../util"
 import Vector from "../flappy/linear/vector";
+import Map2d from "./map2d";
 
 function Tile(terrain: TerrainType, unit?: Unit): Tile { return { terrain, unit }; }
 
 export type State = {
-    board: Tile[][]
+    board: Map2d<Tile>
+    boardSize: Vector
 }
 
 export interface Tile {
@@ -24,18 +26,19 @@ export interface Unit {
 export const MovementType = strEnum(["foot", "fly"]);
 export type MovementType = keyof typeof MovementType;
 
-const Tile_Pain = Tile(TerrainType.Plain);
-const Tile_Mountain = Tile(TerrainType.Mountain);
-const Tile_Sea = Tile(TerrainType.Sea);
+const Tile_Pain = (unit?: Unit) => Tile(TerrainType.Plain, unit);
+const Tile_Mountain = (unit?: Unit) => Tile(TerrainType.Mountain, unit);
+const Tile_Sea = (unit?: Unit) => Tile(TerrainType.Sea, unit);
 
 export const InitialState: State = {
-    board: [
-        [Tile_Sea, Tile_Sea, Tile_Sea, Tile_Sea, Tile_Sea, Tile_Sea],
-        [Tile_Sea, { terrain: TerrainType.Plain, unit: { name: "UU", movement: 4, movementType: MovementType.foot } }, Tile_Pain, Tile_Pain, Tile_Pain, Tile_Sea],
-        [Tile_Sea, Tile_Pain, Tile_Mountain, Tile_Mountain, Tile_Pain, Tile_Sea],
-        [Tile_Sea, Tile_Pain, Tile_Pain, Tile_Pain, Tile_Pain, Tile_Sea],
-        [Tile_Sea, Tile_Sea, Tile_Sea, Tile_Sea, Tile_Sea, Tile_Sea],
-    ]
+    board: new Map2d([
+        [Tile_Sea(), Tile_Sea(), Tile_Sea(), Tile_Sea(), Tile_Sea(), Tile_Sea()],
+        [Tile_Sea(), Tile_Pain({ name: "UU", movement: 4, movementType: MovementType.foot }), Tile_Pain(), Tile_Pain(), Tile_Pain(), Tile_Sea()],
+        [Tile_Sea(), Tile_Pain(), Tile_Mountain(), Tile_Mountain(), Tile_Pain(), Tile_Sea()],
+        [Tile_Sea(), Tile_Pain(), Tile_Pain(), Tile_Pain(), Tile_Pain(), Tile_Sea()],
+        [Tile_Sea(), Tile_Sea(), Tile_Sea(), Tile_Sea(), Tile_Sea(), Tile_Sea()],
+    ]),
+    boardSize: new Vector(5, 6)
 }
 
 export function getMovementCost(movementType: MovementType, terrain: TerrainType) {

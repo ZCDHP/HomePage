@@ -78,7 +78,7 @@ function getBoardPos(state: ViewState, pos: Vector) {
 }
 function getBoardSize(state: ViewState, pos: Vector) {
     return Vector.scale(
-        new Vector(state.gameState.board.length, state.gameState.board[0].length),
+        state.gameState.boardSize,
         TileSize * state.boardScale);
 }
 
