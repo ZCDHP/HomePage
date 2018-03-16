@@ -50,7 +50,7 @@ export function move(oldState: ViewState, pos: Vector): ViewState {
     }
 
     const boardPos = getBoardPos(oldState, pos);
-    const boardSize = getBoardSize(oldState, pos);
+    const boardSize = getBoardSize(oldState);
     if (boardPos.x < 0 || boardPos.y < 0 || boardPos.x > boardSize.x || boardPos.y > boardSize.y)
         return oldState;
     return immer(oldState, draft => {
@@ -64,7 +64,7 @@ export function drop(oldState: ViewState, pos: Vector): ViewState {
 
 export function click(oldState: ViewState, pos: Vector): ViewState {
     const boardPos = getBoardPos(oldState, pos);
-    const boardSize = getBoardSize(oldState, pos);
+    const boardSize = getBoardSize(oldState);
 
     if (boardPos.x < 0 || boardPos.y < 0 || boardPos.x > boardSize.x || boardPos.y > boardSize.y)
         return oldState;
@@ -76,10 +76,11 @@ export function click(oldState: ViewState, pos: Vector): ViewState {
 function getBoardPos(state: ViewState, pos: Vector) {
     return Vector.scale(Vector.subtracion(pos, state.boardOffset), 1 / state.boardScale);
 }
-function getBoardSize(state: ViewState, pos: Vector) {
+
+function getBoardSize(state: ViewState) {
     return Vector.scale(
         state.gameState.boardSize,
-        TileSize * state.boardScale);
+        TileSize);
 }
 
 // rendering
