@@ -1,35 +1,37 @@
 import * as React from "react";
 
-import { State as GameState, InitialState as InitialGameState } from './state';
-import * as View from './viewState';
-import { scaleCanvas } from "../util";
+import { Game, InitialState as InitialGameState } from './game';
+import { GameView, InitialView } from './view_components/game/game.view';
+import { render as renderGame } from './view_components/game/game.render'
+import { handle as HandleEvent } from './eventPipline';
+import * as Event from './events';
+import { scaleCanvas, transform } from "../util";
 import Vector from "../flappy/linear/vector";
 
-
-export class Game extends React.Component<{ id: string }>{
+export class Main extends React.Component<{ id: string }>{
     render() {
         return <canvas
             id={this.props.id}
             className="col-md-12 col-xl-10 offset-xl-1 p-0"
             onWheel={e => {
-                this.viewState = View.scale(this.viewState, this.mousePosition(e), e.deltaY);
                 e.preventDefault();
+                this.view = HandleEvent(this.view, Event.Scale(this.mousePosition(e), e.deltaY));
             }}
             onMouseDown={e => {
                 e.preventDefault();
-                this.viewState = View.dragStart(this.viewState, this.mousePosition(e));
+                this.view = HandleEvent(this.view, Event.DragStart(this.mousePosition(e)));
             }}
             onMouseMove={e => {
                 e.preventDefault();
-                this.viewState = View.move(this.viewState, this.mousePosition(e));
+                this.view = HandleEvent(this.view, Event.Move(this.mousePosition(e)));
             }}
             onMouseUp={e => {
                 e.preventDefault();
-                this.viewState = View.drop(this.viewState, this.mousePosition(e));
+                this.view = HandleEvent(this.view, Event.DragEnd(this.mousePosition(e)));
             }}
             onClick={e => {
                 e.preventDefault();
-                this.viewState = View.click(this.viewState, this.mousePosition(e));
+                this.view = HandleEvent(this.view, Event.Click(this.mousePosition(e)));
             }}
         />
     }
@@ -44,7 +46,7 @@ export class Game extends React.Component<{ id: string }>{
         const onFrame = (currentMS: number, lastMS: number) => {
             //this.gameState = frame(currentMS - lastMS, this.gameState);
 
-            View.render(context, this.viewState);
+            renderGame(context, this.view);
             requestAnimationFrame(nextMS => onFrame(nextMS, currentMS));
         };
 
@@ -55,20 +57,11 @@ export class Game extends React.Component<{ id: string }>{
 
     mousePosition(e: React.MouseEvent<HTMLCanvasElement>): Vector {
         const rect = this.canvas!.getBoundingClientRect();
-        return Vector.scale(
-            Vector.subtracion(
-                new Vector(e.clientX, e.clientY),
-                new Vector(rect.left, rect.top)),
-            1 / this.scale
-        );
+
+        return transform(this.scale, new Vector(rect.left, rect.top), new Vector(e.clientX, e.clientY));
     }
 
-    viewState: View.ViewState = {
-        gameState: InitialGameState,
-        boardScale: 1,
-        boardOffset: new Vector(0, 0),
-        boardView: { type: "None" }
-    }
+    view: GameView = InitialView(InitialGameState);
     scale: number = 0;
     canvas: HTMLCanvasElement | null = null;
 }

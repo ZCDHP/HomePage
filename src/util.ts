@@ -1,5 +1,6 @@
 import * as BezierEasing from 'bezier-easing'
 import { List } from "immutable"
+import Vector from './flappy/linear/vector';
 
 export function assertUnreachable(x: never): never {
     throw new Error("Didn't expect to get here");
@@ -26,9 +27,15 @@ export class Bazier {
     public static ease = BezierEasing(0.25, 0.1, 0.25, 1);
 }
 
+export function transform(scale: number, offset: Vector, position: Vector) {
+    return Vector.scale(
+        Vector.subtracion(position, offset),
+        1 / scale
+    );
+}
 
 interface Coordinated2<T> {
-    corrdinate: { x: number, y: number },
+    corrdinate: Vector,
     value: T
 };
 export class Array2 {

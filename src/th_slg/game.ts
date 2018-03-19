@@ -6,7 +6,7 @@ import immer from "immer";
 
 function Tile(terrain: TerrainType, unit?: Unit): Tile { return { terrain, unit }; }
 
-export type State = {
+export type Game = {
     board: Map2d<Tile>
     boardSize: Vector
 }
@@ -32,7 +32,7 @@ const Tile_Pain = (unit?: Unit) => Tile(TerrainType.Plain, unit);
 const Tile_Mountain = (unit?: Unit) => Tile(TerrainType.Mountain, unit);
 const Tile_Sea = (unit?: Unit) => Tile(TerrainType.Sea, unit);
 
-export const InitialState: State = {
+export const InitialState: Game = {
     board: new Map2d([
         [Tile_Sea(), Tile_Sea(), Tile_Sea(), Tile_Sea(), Tile_Sea(), Tile_Sea()],
         [Tile_Sea(), Tile_Pain({ name: "UU", movement: 4, movementType: MovementType.foot }), Tile_Pain(), Tile_Pain(), Tile_Pain(), Tile_Sea()],
@@ -65,12 +65,12 @@ function footMovementCost(terrain: TerrainType) {
     assertUnreachable(terrain);
 }
 
-export function moveUnit(from: Vector, path: List<Vector>, oldState: State): State {
+export function moveUnit(from: Vector, path: List<Vector>, oldState: Game): Game {
     const unit = oldState.board.get(from)!.unit!;
     return moveUnitStep(from, from, unit.movement, path, oldState);
 }
 
-export function moveUnitStep(from: Vector, position: Vector, movement: number, path: List<Vector>, oldState: State): State {
+export function moveUnitStep(from: Vector, position: Vector, movement: number, path: List<Vector>, oldState: Game): Game {
     const unit = oldState.board.get(from)!.unit!;
 
     if (path.count() == 0)

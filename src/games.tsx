@@ -4,7 +4,7 @@ import GameDescription from "./gameDescription";
 
 import { Main as Flappy } from './flappy/main'
 import { Game as _2048 } from './2048/game'
-import { Game as TH_slg } from './th_slg/game'
+import { Main as TH_slg } from './th_slg/main'
 
 const Games: GameDescription[] = [
     {
