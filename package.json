@@ -22,7 +22,7 @@
     "immutable": "^3.8.2",
     "koa": "^2.5.0",
     "koa-static": "^4.0.2",
-    "node-sass": "^4.7.2",
+    "node-sass": "^4.9.2",
     "sass-loader": "^6.0.7",
     "style-loader": "^0.20.2",
     "ts-loader": "^3.5.0",
